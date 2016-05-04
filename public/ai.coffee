@@ -123,36 +123,34 @@ $ ->
       renderBoard(board)
 
     aiMove = (wantPath, callback) ->
-      $.post "/ai", { board: Board.encode(board), piece: curPiece, preview: preview, wantPath: wantPath }, callback
+      pieces = [curPiece.pieceType].concat(preview)
+      [w, h] = getDims($board)
+      $.post "/ai", { board: {W: w, H: h, data: Board.encode(board)}, pieces: pieces }, callback
 
-    playNextPiece = (animationTime, callback, loadTime) ->
+    playNextPiece = (animationTime) ->
       prvBoard = board
       ctime = Date.now()
+      print curPiece
       aiMove animationTime > 0, (data) ->
-        setTimeout ->
-          if data?.move
-            board = Board.addPiece(board, data.move)
-            ppreview = clone(preview)
-            curPiece = nextPiece()
-            movecount += 1
-            clears += Board.empty(board)
+        print {data} # should be a path
+        if data.path?
+          # todo: fix
+          board = Board.addPiece(board, data.move)
+          ppreview = clone(preview)
+          curPiece = nextPiece()
 
-            nboard = board
-            npiece = curPiece
-            npreview = clone(preview)
+          nboard = board
+          npiece = curPiece
+          npreview = clone(preview)
 
-            animateMove prvBoard, data.move, data.path, animationTime, ->
-              if animationTime > 0
-                renderBoardWithPiece(nboard, npiece)
-                renderPreview(npreview)
-              else
-                renderPreview(ppreview)
-              updateStats()
-            if callback?
-              callback()
-          else
-            print('no move returned')
-        , ctime + loadTime - Date.now()
+          animateMove prvBoard, data.move, data.path, animationTime, ->
+            if animationTime > 0
+              renderBoardWithPiece(nboard, npiece)
+              renderPreview(npreview)
+            else
+              renderPreview(ppreview)
+        else
+          print('no move returned')
 
     $('#piece-send').click -> playNextPiece(1000)
 

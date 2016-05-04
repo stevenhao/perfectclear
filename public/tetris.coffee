@@ -144,7 +144,13 @@ Board = {
     [0..w-1].forEach (x) ->
       board[x][h-1] = 0
 
-  encode: (board) -> JSON.stringify(board)
+  encode: (board) -> 
+    [w, h] = Board.dims(board)
+    ret = ''
+    [h-1..0].forEach (y) -> 
+      [0..w-1].forEach (x) ->
+        ret += board[x][y]
+    ret
 
   decode: (str) -> JSON.parse(str)
 

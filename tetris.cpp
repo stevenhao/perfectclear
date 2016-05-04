@@ -36,6 +36,14 @@ struct board {
   }
 };
 
+string pieceNames = "IJLOSTZ";
+int getPieceIndex(string s) {
+  for(int i = 0; i < 7; ++i) {
+    if (pieceNames[i] == s[0]) return i + 1;
+  }
+  return -1;
+}
+
 pii pieceLocations[MAXN][4];
 pii centers[MAXN];
 
@@ -177,11 +185,6 @@ vector<int> getPath(board b, int pType, piece p) { // returns info on most recen
   }
   reverse(ans.begin(), ans.end());
   return ans;
-}
-
-int _main() {
-  cout << "hi\n";
-  return 0;
 }
 
 void loadPieceData() {

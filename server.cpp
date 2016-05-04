@@ -8,8 +8,10 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 
+#include "json.hpp"
 #include "engine.cpp"
 
+using json = nlohmann::json;
 using namespace std;
 
 
@@ -19,47 +21,79 @@ void error(const char *msg)
   exit(1);
 }
 
-board readBoard(stringstream &ss) {
-  int buf[MAXN][MAXN];
-  int _W, _H;
-  ss >> _W >> _H;
-  if (_W != W || _H != H) throw "gg";
-  for(int i = 0; i < H; ++i) {
-    string tmp;
-    ss >> tmp;
-    for(int j = 0; j < W; ++j) {
-      buf[i][j] = tmp[j] != '.';
-    }
-  }
-  return board(buf);
+int toInt(string s) {
+  int i;
+  stringstream ss;
+  ss << s;
+  ss >> i;
+  return i;
 }
 
-vector<int> readPieces(stringstream &ss) {
-  int N;
-  ss >> N;
-  vector<int> v(N);
-  for(int i = 0; i < N; ++i) {
-    ss >> v[i];
+board readBoard(json j) {
+  cout << j << "\n";
+  if (j["W"].is_string() && j["H"].is_string() && j["data"].is_string()) {
+    int _W = toInt(j["W"].get<string>());
+    int _H = toInt(j["H"].get<string>());
+    string s = j["data"].get<string>();
+    if (_W != W || _H != H) throw "gg";
+    int buf[MAXN][MAXN];
+
+    int cnt = 0;
+    for(int i = 0; i < H; ++i) {
+      for(int j = 0; j < W; ++j) {
+        buf[i][j] = s[cnt] != '0';
+        ++cnt;
+      }
+    }
+    return board(buf);
+  } else {
+    throw "cannot parse board";
   }
-  return v;
+}
+
+vector<int> readPieces(json j) {
+  vector<string> v = j.get<vector<string>>();
+  vector<int> ret;
+  stringstream ss;
+  for (auto &s: v) {
+    ret.push_back(getPieceIndex(s));
+  }
+  return ret;
 }
 
 string handleRequest(string input) {
-  stringstream ss(input);
-  board b = readBoard(ss);
-  vector<int> pieces = readPieces(ss);
-  piece bestMove = getBestMove(b, pieces);
-  return disp(b, bestMove);
+  try {
+    auto j = json::parse(input);
+    if (j.is_object() && j["board"].is_object() && j["pieces"].is_array()) {
+      cout << "parsing board\n";
+      board b = readBoard(j["board"]);
+      cout << "parsing pieces\n";
+      vector<int> pieces = readPieces(j["pieces"]);
+      cout << "done\n";
+      for (auto &i: pieces) {
+        cout << i << " ";
+      }
+      cout << "\n";
+
+      cout << disp(b) << "\n";
+      piece bestMove = getBestMove(b, pieces);
+      cout << bestMove.dxy.first << bestMove.dxy.second << "\n";
+      return disp(b, bestMove);
+    }
+  } catch (int e) {
+  }
+
+  return "ok";
 }
 
 int main(int argc, char *argv[])
 {
   precompute();
   loadPieceData();
-  stringstream ss;
-  ss << cin.rdbuf();
-  string ans = handleRequest(ss.str());
-  cout << ans << "\n";
+  /*  stringstream ss;
+      ss << cin.rdbuf();
+      string ans = handleRequest(ss.str());
+      cout << ans << "\n";*/
 
   int sockfd, newsockfd, portno;
   socklen_t clilen;
@@ -78,25 +112,26 @@ int main(int argc, char *argv[])
   serv_addr.sin_family = AF_INET;
   serv_addr.sin_addr.s_addr = INADDR_ANY;
   serv_addr.sin_port = htons(portno);
-  if (bind(sockfd, (struct sockaddr *) &serv_addr,
+  if (::bind(sockfd, (struct sockaddr *) &serv_addr,
         sizeof(serv_addr)) < 0) 
     error("ERROR on binding");
   listen(sockfd,5);
   clilen = sizeof(cli_addr);
+  newsockfd = accept(sockfd, 
+      (struct sockaddr *) &cli_addr, 
+      &clilen);
+  if (newsockfd < 0) 
+    error("ERROR on accept");
   while (true) {
-    newsockfd = accept(sockfd, 
-        (struct sockaddr *) &cli_addr, 
-        &clilen);
-    if (newsockfd < 0) 
-      error("ERROR on accept");
     bzero(buffer,256);
     n = read(newsockfd,buffer,255);
-    if (n < 0) error("ERROR reading from socket");
+    if (n < 0) { cerr << "ERROR reading from socket\n"; continue; }
     printf("Here is the message: %s\n",buffer);
-    n = write(newsockfd,"I got your message",18);
-    if (n < 0) error("ERROR writing to socket");
-    close(newsockfd);
+    string res = handleRequest(string(buffer));
+    n = write(newsockfd, res.c_str(), res.size());
+    if (n < 0) { cerr << "ERROR writing to socket\n"; continue; }
   }
+  close(newsockfd);
   close(sockfd);
   return 0; 
 }

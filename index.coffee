@@ -20,26 +20,27 @@ app.use(express.static(__dirname + '/public/views'));
 app.get '/', (req, res) ->
   res.send('hi')
 
-
-
 requests = {}
 reqCnt = 0
 
 net = require('net');
-client = net.createConnection {port: 4448}, -> 
+client = net.createConnection {port: 4445}, -> 
   #'connect' listener
   console.log('connected to server!');
 
 client.on 'data', (data) ->
-  print 'got data', data.toString()
+  msg = JSON.parse(data.toString())
+  print 'sending', msg
+  requests[msg.reqid].send(msg.body)
 
 app.post '/ai', (req, res) ->
   if req.body?
+    msg = req.body
     reqCnt += 1
-    reqid = reqCnt # in theory, this is "atomic"
-    requests[reqid] = res
-    print('/ai: got request', req.body)
-    client.write(JSON.stringify(req.body));
+    msg.reqid = reqCnt # in theory, this is "atomic"
+    requests[msg.reqid] = res
+    print('/ai: got request', msg)
+    client.write(JSON.stringify(msg));
   else
     res.send('bad request')
 

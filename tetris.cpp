@@ -1,9 +1,10 @@
 #include <vector>
-#include <iostream>
 #include <algorithm>
 using namespace std;
 
 typedef pair<int, int> pii;
+#define x first
+#define y second
 
 const pii LEFT(-1, 0), RIGHT(1, 0), DOWN(0, -1);
 
@@ -18,61 +19,130 @@ pii rotate(pii a, int r) {
   else return pii(-a.second, a.first);
 }
 
-/* computes moves and stuff
-*/
-
-const int MAXN = 11;
+const int MAXN = 15;
 const int W = 10;
 const int H = 6;
 
-struct board {
-  int grid[MAXN][MAXN];
-  board (int k[MAXN][MAXN]) {
-    for(int i = 0; i < W; ++i) {
-      for(int j = 0; j < H; ++j) {
-        grid[i][j] = k[H - j - 1][i];
-      }
-    }
-  }
-};
+typedef unsigned __int128 lll;
 
-string pieceNames = "IJLOSTZ";
-int getPieceIndex(string s) {
-  for(int i = 0; i < 7; ++i) {
-    if (pieceNames[i] == s[0]) return i + 1;
-  }
-  return -1;
+/*
+ * bit tricks
+ * */
+inline int _get(lll a, int p) {
+  return (a >> p) & 1;
+}
+inline void _set(lll &a, int p, int v) {
+  if (v) a |= lll(1) << p;
+  else a &= ~(lll(1) << p);
 }
 
-pii pieceLocations[MAXN][4];
-pii centers[MAXN];
+/*
+ * grid -> bit index
+ */
+inline int abspos(int x, int y) { // 13 x 9 grid
+  return y * 13 + x;
+}
+
+inline int pos(int x, int y) {
+  return abspos(x + 3, y + 3);
+}
+
+inline lll rowmsk(int y) {
+  lll ret = (lll(1) << W) - 1;
+  return ret << pos(0, y);
+}
+
+lll borderMask() {
+  lll ret = ~lll(0);
+  for(int y = 0; y < H; ++y) {
+    ret ^= rowmsk(y);
+  }
+  return ret;
+}
+const lll border = borderMask();
+
+/*
+ * piece data (loaded in tetrisio.cpp)
+ */
+
+lll pieces[MAXN][4]; // when bounding square is absolute bottom left corner
+pii centers[MAXN]; // bit offset of initial bounding square
+// center[p] = pos(x, y), where x,y is lowerleft corner of bounding square
 
 struct piece {
   int pieceType;
   pii dxy;
   int dt;
-  piece() {}
-  piece(int pType) {
-    pieceType = pType;
-    dxy = pii();
+
+  piece(int pType) : pieceType(pType) {
+    dxy = centers[pType];
     dt = 0;
   }
 
-  pii block(int i) {
-    pii cx = centers[pieceType];
-    pii ret = cx + rotate(pieceLocations[pieceType][i], dt);
-    return pii(ret.first / 2, ret.second / 2) + dxy;
+  lll blocks() {
+    return pieces[pieceType][dt] << pos(dxy.x, dxy.y);
   }
 
-  int hash() {
-    int dx = dxy.first, dy = dxy.second;
-    return ((dx + 5) * 10 + (dy + 5)) * 4 + dt;
+  piece() {}
+  bool operator==(const piece &o) const {
+    return pieceType == o.pieceType && dxy == o.dxy && dt == o.dt;
   }
 };
+
+namespace std {
+  template <> struct hash<piece>
+  {
+    std::size_t operator()(const piece& k) const
+    {
+      // Compute individual hash values for two data members and combine them using XOR and bit shifting
+      return (hash<int>()((k.pieceType << 10) | (k.dxy.x << 6) | (k.dxy.y << 2) | (k.dt)));
+    }
+  };
+}
 
 vector<pii> Ikicks[5][5]; // kicks for I piece
 vector<pii> Skicks[5][5]; // kicks for other
 
+struct board {
+  lll grid;
+  inline int get(int x, int y) {
+    return _get(grid, pos(x, y));
+  }
+  inline void set(int i, int j, int b) {
+    _set(grid, pos(i, j), b);
+  }
+
+  board (char k[MAXN][MAXN], char ch) {
+    grid = 0;
+    for(int i = 0; i < W; ++i) {
+      for(int j = 0; j < H; ++j) {
+        set(i, j, k[H - j - 1][i] != ch);
+      }
+    }
+  }
+
+  board(lll g = 0) : grid(g) {}
+
+  bool fits(piece move) {
+    lll b = move.blocks();
+    if (b & (grid | border)) return false;
+    for(int i = 0; i < 4; ++i) {
+      if (!b) {
+        return false; // at least 4 blocks
+      }
+      b &= b - 1;
+    }
+    return !b; // at most 4 blocks
+  }
+
+  void add(piece move) {
+    grid |= move.blocks();
+  }
+};
+
+/*
+ * computing moves
+ * */
 piece rot(piece p, int dt) {
   p.dt = (p.dt + dt + 4) % 4;
   return p;
@@ -83,22 +153,11 @@ piece trans(piece p, pii dxy) {
   return p;
 }
 
-bool fits(piece p, board &b) {
-  for(int i = 0; i < 4; ++i) {
-    pii xy = p.block(i); int x = xy.first, y = xy.second;
-    if (x < 0 || y < 0 || x >= W || y >= H) return false;
-    if (b.grid[x][y]) {
-      return false;
-    }
-  }
-  return true;
-}
-
 bool rest(piece &p, board &b) {
-  return !fits(trans(p, DOWN), b);
+  return !b.fits(trans(p, DOWN));
 }
 
-vector<pii> getKicks(piece p, int rotType) {
+inline vector<pii> getKicks(piece p, int rotType) {
   return (p.pieceType == 0 ? Ikicks : Skicks)[p.dt][rotType];
 }
 
@@ -110,14 +169,14 @@ piece apply(int move, piece cur, board &b) { // [ROT1, ROT2, LEFT, RIGHT, DROP]
     piece n = rot(cur, dt);
     for(int i = 0; i < k.size(); ++i) {
       piece nk = trans(n, k[i]);
-      if (fits(nk, b)) {
+      if (b.fits(nk)) {
         return nk;
       }
     }
   } else if (move == 2 || move == 3) {
     pii dxy = (move == 2 ? LEFT : RIGHT);
     piece n = trans(cur, dxy);
-    if (fits(n, b)) return n;
+    if (b.fits(n)) return n;
   } else if (move == 4) {
     while (!rest(cur, b)) {
       cur = trans(cur, DOWN);
@@ -126,144 +185,4 @@ piece apply(int move, piece cur, board &b) { // [ROT1, ROT2, LEFT, RIGHT, DROP]
   }
   return cur;
 }
-
-bool vis[MAXN * MAXN * 5];
-piece trace[MAXN * MAXN * 5];
-piece queue[MAXN * MAXN * 5];
-
-int ql, qr;
-void psh(piece cur, piece prv) {
-  int h = cur.hash();
-  if (vis[h]) return;
-  vis[h] = true;
-  trace[h] = prv;
-  queue[qr] = cur;
-  ++qr;
-}
-
-vector<piece> bfs(board &b, piece initial) {
-  memset(vis, false, sizeof(vis));
-  memset(trace, false, sizeof(trace));
-  memset(queue, false, sizeof(queue));
-  ql = qr = 0;
-  psh(initial, piece());
-
-  vector<piece> ret;
-  while (ql < qr) {
-    piece cur = queue[ql]; ++ql;
-    if (rest(cur, b)) {
-      ret.push_back(cur);
-    }
-    for(int move = 0; move < MOVES; ++move) {
-      piece nxt = apply(move, cur, b);
-      psh(nxt, cur);
-    }
-  }
-  return ret;
-}
-
-vector<piece> getMoves(board b, int pType) {
-  piece initial = piece(pType);
-  vector<piece> ret = bfs(b, initial);
-  return ret;
-}
-
-vector<int> getPath(board b, int pType, piece p) { // returns info on most recent getMoves
-  vector<int> ans ;
-  piece initial = piece(pType);
-  while (p.hash() != initial.hash()) {
-    piece n = trace[p.hash()];
-    int move = 0;
-    for(int i = 0; i < MOVES; ++i) {
-      if (apply(i, n, b).hash() == p.hash()) {
-        move = i;
-        break;
-      }
-    }
-    ans.push_back(move);
-    p = n;
-  }
-  reverse(ans.begin(), ans.end());
-  return ans;
-}
-
-void loadPieceData() {
-  FILE *fin = fopen("pieces", "r");
-  for(int i = 1; i <= 7; ++i) {
-    for(int j = 0; j < 4; ++j) {
-      double x, y;
-      fscanf(fin, "%lf %lf", &x, &y);
-      pieceLocations[i][j] = pii(x*2, y*2);
-    }
-  }
-  fin = fopen("centers", "r");
-  for(int i = 1; i <= 7; ++i) {
-    double x, y;
-    fscanf(fin, "%lf %lf", &x, &y);
-    centers[i] = pii(x*2,y*2);
-  }
-
-  fin = fopen("kicks", "r");
-  for(int i = 0; i < 2; ++i) {
-    for(int j = 0; j < 4; ++j) {
-      for(int k = 0; k < 2; ++k) {
-        int dt = (j + k) % 4;
-        vector<pii> &v = ((i == 1) ? Ikicks : Skicks)[dt][k];
-        for(int t = 0; t < 5; ++t) {
-          int x, y;
-          fscanf(fin, "%d %d", &x, &y);
-          pii p(x, y);
-
-          v.push_back(p);
-        }
-      }
-    }
-  }
-}
-
-void write(board b, char buf[MAXN][MAXN]) {
-  for(int i = 0; i < H; ++i) {
-    for(int j = 0; j < W; ++j) {
-      buf[i][j] = b.grid[j][H - i - 1] ? '*' : '.';
-    }
-  }
-}
-
-void write(piece p, char buf[MAXN][MAXN], char ch='+') {
-  for(int j = 0; j < 4; ++j) {
-    pii xy = p.block(j);
-    buf[H - xy.second - 1][xy.first] = ch;
-  }
-}
-
-string print(char buf[MAXN][MAXN]) {
-  stringstream ss;
-  for(int i = 0; i < H; ++i) {
-    buf[i][W] = '\0';
-    ss << buf[i] << "\n";
-  }
-  return ss.str();
-}
-
-string disp(board b, piece move) {
-  char buf[MAXN][MAXN];
-  stringstream ss;
-  write(b, buf);
-  write(move, buf);
-  ss << print(buf);
-  vector<int> moves = getPath(b, move.pieceType, move);
-  for(int i = 0; i < moves.size(); ++i) {
-    ss << moves[i] << " ";
-  }
-  ss << "\n";
-  return ss.str();
-}
-
-string disp(board b) {
-  char buf[MAXN][MAXN];
-  stringstream ss;
-  write(b, buf);
-  return print(buf);
-}
-
 

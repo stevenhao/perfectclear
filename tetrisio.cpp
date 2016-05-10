@@ -1,0 +1,133 @@
+#include <cstring>
+#include <iostream>
+#include <fstream>
+#include <sstream>
+using namespace std;
+
+#include "tetris.cpp"
+
+string pieceNames = "IJLOSTZ";
+int getPieceIndex(string s) {
+  for(int i = 0; i < 7; ++i) {
+    if (pieceNames[i] == s[0]) return i;
+  }
+  return -1;
+}
+
+void loadPieces() {
+  ifstream fin("pieces", ifstream::in);
+  int buf[MAXN][MAXN], nbuf[MAXN][MAXN];
+  for(int i = 0; i < 7; ++i) {
+    int size;
+    fin >> size >> size;
+    for(int y = 0; y < size; ++y) {
+      string s; fin >> s;
+      for(int x = 0; x < size; ++x) {
+        buf[x][size - 1 - y] = s[x] == '+';
+      }
+    }
+
+    for(int t = 0; t < 4; ++t) {
+      lll &msk = pieces[i][t];
+      for(int x = 0; x < size; ++x) {
+        for(int y = 0; y < size; ++y) {
+          if (buf[x][y]) {
+          }
+          _set(msk, abspos(x, y), buf[x][y]);
+        }
+      }
+
+      for(int x = 0; x < size; ++x) { // rotate buf
+        for(int y = 0; y < size; ++y) { // (x, y) -> (y, size-x-1)
+          nbuf[y][size-x-1] = buf[x][y];
+        }
+      }
+      memcpy(buf, nbuf, sizeof(buf));
+    }
+  }
+}
+
+void loadCenters() {
+  ifstream fin("centers", ifstream::in);
+  for(int i = 0; i < 7; ++i) {
+    fin >> centers[i].x >> centers[i].y;
+  }
+}
+
+void loadKicks() {
+  ifstream fin("kicks", ifstream::in);
+  for(int i = 0; i < 2; ++i) {
+    for(int j = 0; j < 4; ++j) {
+      for(int k = 0; k < 2; ++k) {
+        int dt = (j + k) % 4;
+        vector<pii> &v = ((i == 1) ? Ikicks : Skicks)[dt][k];
+        for(int t = 0; t < 5; ++t) {
+          int x, y;
+          fin >> x >> y;
+          v.emplace_back(x, y);
+        }
+      }
+    }
+  }
+}
+
+void loadData() {
+  loadPieces();
+  loadCenters();
+  loadKicks();
+  cerr << "loaded data\n";
+}
+
+void write(lll msk, char buf[MAXN][MAXN], char ch) {
+  for(int i = 0; i < W + 3; ++i) {
+    for(int j = 0; j < H + 3; ++j) {
+      if (_get(msk, abspos(i, j))) {
+        buf[H + 3 - 1 - j][i] = ch;
+      }
+    }
+  }
+}
+
+void clear(char buf[MAXN][MAXN]) {
+  write(~lll(0), buf, '.');
+}
+
+template<class T> void print(vector<T> v) {
+  for(int i = 0; i < v.size(); ++i) {
+    cout << v[i] << " ";
+  }
+  cout << "\n";
+}
+
+
+void print(char buf[MAXN][MAXN]) {
+  for(int i = 0; i < H + 3; ++i) {
+    buf[i][W + 3] = '\0';
+    cout << buf[i] << "\n";
+  }
+}
+
+void disp(board b, piece move) {
+  cout << "Board with piece:\n";
+  char buf[MAXN][MAXN];
+  clear(buf);
+  write(border, buf, 'O');
+  write(b.grid, buf, '*');
+  write(move.blocks(), buf, '+');
+  print(buf);
+
+//  vector<int> moves = getPath(b, move);
+//  cout << "Moves:\n";
+//  print(moves);
+}
+
+void disp(board b) {
+  cout << "Board:\n";
+  char buf[MAXN][MAXN];
+  clear(buf);
+  write(border, buf, 'O');
+  write(b.grid, buf, '*');
+  print(buf);
+}
+
+

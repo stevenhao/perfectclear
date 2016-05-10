@@ -30,22 +30,21 @@ int toInt(string s) {
 }
 
 board readBoard(json j) {
-  cout << j << "\n";
   if (j["W"].is_string() && j["H"].is_string() && j["data"].is_string()) {
     int _W = toInt(j["W"].get<string>());
     int _H = toInt(j["H"].get<string>());
     string s = j["data"].get<string>();
     if (_W != W || _H != H) throw "gg";
-    int buf[MAXN][MAXN];
+    char buf[MAXN][MAXN];
 
     int cnt = 0;
     for(int i = 0; i < H; ++i) {
       for(int j = 0; j < W; ++j) {
-        buf[i][j] = s[cnt] != '0';
+        buf[i][j] = s[cnt];
         ++cnt;
       }
     }
-    return board(buf);
+    return board(buf, '0');
   } else {
     throw "cannot parse board";
   }
@@ -62,23 +61,27 @@ vector<int> readPieces(json j) {
 }
 
 string handleRequest(string input) {
+  cout << "handling req [" << input << "]\n";
+  if (!input.size()) return "";
   try {
     auto j = json::parse(input);
-    if (j.is_object() && j["board"].is_object() && j["pieces"].is_array()) {
-      cout << "parsing board\n";
+    cerr << j << "\n";
+    if (j.is_object() && j["board"].is_object() && j["pieces"].is_array() && j["reqid"].is_number()) {
+      int reqid = j["reqid"].get<int>();
       board b = readBoard(j["board"]);
-      cout << "parsing pieces\n";
       vector<int> pieces = readPieces(j["pieces"]);
-      cout << "done\n";
-      for (auto &i: pieces) {
-        cout << i << " ";
-      }
-      cout << "\n";
-
-      cout << disp(b) << "\n";
       piece bestMove = getBestMove(b, pieces);
-      cout << bestMove.dxy.first << bestMove.dxy.second << "\n";
-      return disp(b, bestMove);
+      vector<int> path = getPath(b, bestMove);
+      disp(b, bestMove);
+      piece initial = piece(pieces[0]);
+      disp(b, initial);
+
+      json ret;
+      ret["path"] = path;
+      json msg;
+      msg["body"] = ret;
+      msg["reqid"] = reqid;
+      return msg.dump();
     }
   } catch (int e) {
   }
@@ -89,7 +92,7 @@ string handleRequest(string input) {
 int main(int argc, char *argv[])
 {
   precompute();
-  loadPieceData();
+  loadData();
   /*  stringstream ss;
       ss << cin.rdbuf();
       string ans = handleRequest(ss.str());
@@ -117,21 +120,27 @@ int main(int argc, char *argv[])
     error("ERROR on binding");
   listen(sockfd,5);
   clilen = sizeof(cli_addr);
-  newsockfd = accept(sockfd, 
-      (struct sockaddr *) &cli_addr, 
-      &clilen);
-  if (newsockfd < 0) 
-    error("ERROR on accept");
   while (true) {
-    bzero(buffer,256);
-    n = read(newsockfd,buffer,255);
-    if (n < 0) { cerr << "ERROR reading from socket\n"; continue; }
-    printf("Here is the message: %s\n",buffer);
-    string res = handleRequest(string(buffer));
-    n = write(newsockfd, res.c_str(), res.size());
-    if (n < 0) { cerr << "ERROR writing to socket\n"; continue; }
+    newsockfd = accept(sockfd, 
+        (struct sockaddr *) &cli_addr, 
+        &clilen);
+    if (newsockfd < 0) 
+      error("ERROR on accept");
+    while (true) {
+      bzero(buffer,256);
+      n = read(newsockfd,buffer,255);
+      if (n < 0) { cerr << "ERROR reading from socket\n"; break; }
+      string res = handleRequest(string(buffer));
+      cout << res << "\n";
+      if (res.size()) {
+        n = write(newsockfd, res.c_str(), res.size());
+      } else {
+        break;
+      }
+      if (n < 0) { cerr << "ERROR writing to socket\n"; break; }
+    }
+    close(newsockfd);
   }
-  close(newsockfd);
   close(sockfd);
   return 0; 
 }

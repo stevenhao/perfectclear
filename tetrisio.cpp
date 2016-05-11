@@ -79,10 +79,10 @@ void loadData() {
 }
 
 void write(lll msk, char buf[MAXN][MAXN], char ch) {
-  for(int i = 0; i < W + 3; ++i) {
-    for(int j = 0; j < H + 3; ++j) {
-      if (_get(msk, abspos(i, j))) {
-        buf[H + 3 - 1 - j][i] = ch;
+  for(int i = 0; i < W; ++i) {
+    for(int j = 0; j < H; ++j) {
+      if (_get(msk, pos(i, j))) {
+        buf[H - 1 - j][i] = ch;
       }
     }
   }
@@ -101,8 +101,8 @@ template<class T> void print(vector<T> v) {
 
 
 void print(char buf[MAXN][MAXN]) {
-  for(int i = 0; i < H + 3; ++i) {
-    buf[i][W + 3] = '\0';
+  for(int i = 0; i < H; ++i) {
+    buf[i][W] = '\0';
     cout << buf[i] << "\n";
   }
 }

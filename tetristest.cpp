@@ -20,17 +20,34 @@ void disp(piece &p) {
 int main() {
   loadData();
   disp(b);
-  piece p(0);
-    disp(b, p);
-  while (b.fits(p)) {
-    disp(b, p);
-    cerr << "dxy:" << p.dxy.x << "," << p.dxy.y << "\n";
-    p = trans(p, DOWN);
-  }
-
-
-  p = piece(0);
-  disp(b, p);
+  piece p(1);
+  mov(p, 1);
   mov(p, 2);
+  rot(p);
+  rot(p);
   disp(b, p);
+  b.add(p);
+  piece q(2);
+  rot(q);
+  rot(q);
+  mov(q, 0);
+  mov(q, 0);
+  mov(q, 0);
+  mov(q, 2);
+  disp(b, q);
+  b.add(q);
+
+  piece r(3);
+  mov(r, 1);
+  mov(r, 1);
+  piece z = r;
+  mov(z, 2);
+  disp(b, z);
+  b.add(z);
+  mov(r, 1);
+  mov(r, 1);
+  mov(r, 2);
+  disp(b, r);
+  b.add(r);
+  disp(b);
 }

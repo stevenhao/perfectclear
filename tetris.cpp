@@ -6,6 +6,17 @@ typedef pair<int, int> pii;
 #define x first
 #define y second
 
+namespace std {
+  template <typename T, typename U> struct hash<pair<T, U>>
+  {
+    std::size_t operator()(const pair<T, U>& k) const
+    {
+      // Compute individual hash values for two data members and combine them using XOR and bit shifting
+      return (hash<T>()(k.x) ^ hash<U>()(k.y));
+    }
+  };
+}
+
 const pii LEFT(-1, 0), RIGHT(1, 0), DOWN(0, -1);
 
 pii operator+(pii a, pii b) {
@@ -24,6 +35,7 @@ const int W = 10;
 const int H = 6;
 
 typedef unsigned __int128 lll;
+typedef long long ll;
 
 /*
  * bit tricks
@@ -123,6 +135,10 @@ struct board {
 
   board(lll g = 0) : grid(g) {}
 
+  bool operator==(const board &o) const {
+    return grid == o.grid;
+  }
+
   bool fits(piece move) {
     lll b = move.blocks();
     if (b & (grid | border)) return false;
@@ -135,10 +151,41 @@ struct board {
     return !b; // at most 4 blocks
   }
 
+  void checkclear() {
+    int clears = 0;
+    lll ngrid = 0;
+    int h = H - 1;
+    lll rmsk = (lll(1) << W) - 1;
+    for(int i = H - 1; i >= 0; --i) {
+      lll row = (grid >> pos(0, i)) & rmsk;
+      if (row != rmsk) {
+        ngrid |= row << pos(0, h);
+        --h;
+      }
+    }
+    while (h >= 0) {
+      ngrid |= rmsk << pos(0, h);
+      --h;
+    }
+    grid = ngrid;
+  }
+
   void add(piece move) {
     grid |= move.blocks();
+    checkclear();
   }
 };
+
+namespace std {
+  template <> struct hash<board>
+  {
+    std::size_t operator()(const board &k) const
+    {
+      // Compute individual hash values for two data members and combine them using XOR and bit shifting
+      return (hash<ll>()(ll((k.grid << 64 >> 64) ^ (k.grid >> 64))));
+    }
+  };
+}
 
 /*
  * computing moves

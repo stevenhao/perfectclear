@@ -3,8 +3,9 @@
 
 using namespace std;
 
-unordered_map<piece, int> vis;
-unordered_map<piece, pair<piece, int> > trace;
+#define umap unordered_map
+umap<piece, int> vis;
+umap<piece, pair<piece, int> > trace;
 piece queue[MAXN*MAXN*5];
 
 int ql, qr;

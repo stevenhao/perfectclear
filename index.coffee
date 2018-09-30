@@ -23,15 +23,15 @@ app.get '/', (req, res) ->
 requests = {}
 reqCnt = 0
 
-# net = require('net');
-# client = net.createConnection {port: 4445}, -> 
-#   #'connect' listener
-#   console.log('connected to server!');
+net = require('net');
+client = net.createConnection {port: 4445}, -> 
+  # 'connect' listener
+  console.log('connected to server!');
 
-# client.on 'data', (data) ->
-#   msg = JSON.parse(data.toString())
-#   print 'sending', msg
-#   requests[msg.reqid].send(msg.body)
+client.on 'data', (data) ->
+  msg = JSON.parse(data.toString())
+  print 'sending', msg
+  requests[msg.reqid].send(msg.body)
 
 app.post '/security', (req, res) ->
   print('got post on /security', req.body)

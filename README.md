@@ -1,10 +1,12 @@
 # perfectclear
 
+Let's get a perfect clear!
+
 # Running locally
 
 ## Build & run the engine
 - `make`
-- `./engine.o 4445`
+- `./server.o 4445`
 
 ## Run the web server
 - `yarn global add coffeescript`

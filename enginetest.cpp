@@ -1,4 +1,13 @@
 #include "engine.cpp"
+
+bool feasible(const board &bb) {
+  lll g = bb.grid;
+  lll a = ~(g | border);
+  lll b = g >> 13;
+  if (a & b) return false;
+  return true;
+}
+
 void go() {
   board end;
   for(int i = 0; i < 4; ++i) {
@@ -8,17 +17,26 @@ void go() {
   umap<board, int> cur;
   cur[end] = 1;
 
+  vector<int> types;
   int depth = 10;
+  srand(1);
+  for(int i = 0; i < depth; ++i) {
+    types.push_back(i % 7);
+//    types.push_back(rand() % 7);
+  }
   for(int i = 0; i < depth; ++i) {
     umap<board, int> nxt;
     cerr << "start loop\n";
     for (auto bi: cur) {
       const board &b = bi.first;
-      for(int j = 0; j < 7; ++j) {
-        for (auto bi2: inEdges(b, j)) {
-          nxt[bi2.first] = 1;
+      int pType = types[i];
+      for (auto bi2: inEdges(b, pType)) {
+        if (feasible(bi2.first)) {
+          nxt[bi2.first] += 1;
         }
       }
+      if (nxt.size() > 10000) break;
+
     }
     cerr << "end loop\n";
     cur = nxt;

@@ -107,11 +107,22 @@ $ ->
     print pieces
     pieces[rand(7)]
 
+
+  makeBag = ->
+    bag = pieces.slice()
+    [0..pieces.length-1].forEach (i) ->
+      j = rand(i + 1)
+      tmp = bag[j]
+      bag[j] = bag[i]
+      bag[i] = tmp
+    bag
   do ->
     board = do ->
       [w, h] = getDims($board)
       Board.board(w, h)
-    preview = [0..5].map -> randomPieceType()
+    bag = makeBag()
+    nextBag = makeBag()
+    preview = bag.slice(0, 6)
     hold = null
 
     commands = {
@@ -131,9 +142,11 @@ $ ->
       $.post "/ai", { board: {W: w, H: h, data: Board.encode(board)}, pieces: p }, callback
 
     nextPiece = ->
-      print 'preview', preview
-      preview.push(randomPieceType())
-      ret = Piece.create(preview.shift(), board)
+      ret = Piece.create(bag.shift(), board)
+      if bag.length == 0
+        bag = nextBag
+        nextBag = makeBag()
+      preview = bag.concat(nextBag).slice(0, 6)
       ret
 
     curPiece = nextPiece()

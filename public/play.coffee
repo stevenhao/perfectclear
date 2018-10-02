@@ -40,6 +40,11 @@ $ ->
         color = getColor(Board.get(board, [x, y]))
         setColor($board, x, y, color)
 
+  renderCounter = (counter) ->
+    print 'counter', counter
+    $counter = $('#counter')
+    $counter.text(counter)
+
   renderBoardWithPiece = (board, piece) -> 
     print 'rendering', piece
     renderBoard(board)
@@ -134,6 +139,8 @@ $ ->
       KeyZ: Piece.rotateB
     }
 
+    counter = 0
+
     AIcommands = [Piece.rotateA, Piece.rotateB, Piece.moveLeft, Piece.moveRight, Piece.hardDrop]
 
     aiMove = (callback) ->
@@ -157,11 +164,26 @@ $ ->
     $('body').keydown (evt) ->
       code = evt.originalEvent.code
       if code == 'Space'
-        curPiece = Piece.hardDrop(curPiece, board)
-        board = Board.addPiece(board, curPiece)
-        curPiece = nextPiece()
-        renderBoardWithPiece(board, curPiece)
-        renderPreview(preview)
+        if !Board.canAddPiece(board, curPiece)
+          Board.reset(board)
+          bag = nextBag
+          nextBag = makeBag()
+          hold = null
+          curPiece = nextPiece()
+          renderHold(hold)
+          renderBoardWithPiece(board, curPiece)
+          renderPreview(preview)
+        else
+          curPiece = Piece.hardDrop(curPiece, board)
+          board = Board.addPiece(board, curPiece)
+          curPiece = nextPiece()
+          renderBoardWithPiece(board, curPiece)
+          renderPreview(preview)
+          if Board.isEmpty(board)
+            counter += 1
+            renderCounter(counter)
+        false
+      else if !Board.canAddPiece(board, curPiece)
         false
       else if code == 'ShiftLeft' || code == 'ShiftRight'
         cType = curPiece.pieceType

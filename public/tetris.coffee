@@ -82,6 +82,10 @@ Data = {
 
 Board = {
   board: (w, h) -> [0..w-1].map -> [0..h-1].map -> 0
+  reset: (board) ->
+    board.forEach (r, i) ->
+      r.forEach (c, j) ->
+        board[i][j] = 0
   empty: (board) ->
     board.every (r) -> r.every (el) -> el == 0
   count: (board) ->
@@ -134,6 +138,10 @@ Board = {
       while ([0..w-1].every (x) -> board[x][y])
         Board.shiftDown(board, y)
     board
+  isEmpty: (board) ->
+    board.every (row) ->
+      row.every (c) ->
+        c == 0
 }
 
 PieceType = {

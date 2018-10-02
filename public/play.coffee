@@ -163,7 +163,7 @@ $ ->
         renderBoardWithPiece(board, curPiece)
         renderPreview(preview)
         false
-      else if code == 'ShiftLeft'
+      else if code == 'ShiftLeft' || code == 'ShiftRight'
         cType = curPiece.pieceType
         if hold
           curPiece = Piece.create(hold, board)
@@ -172,6 +172,7 @@ $ ->
         hold = cType
         renderBoardWithPiece(board, curPiece)
         renderHold(hold)
+        renderPreview(preview)
         false
       else if commands[code]?
         fn = commands[code]

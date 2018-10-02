@@ -4,7 +4,7 @@ bool feasible(const board &bb) {
   lll g = bb.grid;
   lll a = ~(g | border);
   lll b = g >> 13;
-  if (a & b) return false;
+  if ((a & b) != 0) return false;
   return true;
 }
 
@@ -87,7 +87,7 @@ void go2() {
 
 void go3() {
   board b;
-  lll rmsk = (lll(1) << W) - 1;
+  lll rmsk = (ll(1) << W) - 1;
   b.grid |= rmsk << pos(0, 0);
   b.grid |= lll(60) << pos(0, 1);
   disp(b);

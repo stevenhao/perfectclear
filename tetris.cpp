@@ -1,4 +1,5 @@
 #include <vector>
+#include <bitset>
 #include <algorithm>
 using namespace std;
 
@@ -32,16 +33,16 @@ pii rotate(pii a, int r) {
 
 const int MAXN = 15;
 const int W = 10;
-const int H = 6;
+const int H = 10;
 
-typedef unsigned __int128 lll;
+typedef bitset<256> lll;
 typedef long long ll;
 
 /*
  * bit tricks
  * */
 inline int _get(lll a, int p) {
-  return (a >> p) & 1;
+  return a[p];
 }
 inline void _set(lll &a, int p, int v) {
   if (v) a |= lll(1) << p;
@@ -60,7 +61,7 @@ inline int pos(int x, int y) {
 }
 
 inline lll rowmsk(int y) {
-  lll ret = (lll(1) << W) - 1;
+  lll ret = (ll(1) << W) - 1;
   return ret << pos(0, y);
 }
 
@@ -92,7 +93,7 @@ struct piece {
   }
 
   lll blocks() {
-    return pieces[pieceType][dt] << pos(dxy.x, dxy.y);
+    return pieces[pieceType][dt] << pos(dxy.x, dxy.y + H - 6);
   }
 
   piece() {}
@@ -141,7 +142,8 @@ struct board {
 
   bool fits(piece move) {
     lll b = move.blocks();
-    if (b & (grid | border)) return false;
+    if ((b & (grid | border)) != 0) return false;
+    /*
     for(int i = 0; i < 4; ++i) {
       if (!b) {
         return false; // at least 4 blocks
@@ -149,13 +151,15 @@ struct board {
       b &= b - 1;
     }
     return !b; // at most 4 blocks
+    */
+    return true;
   }
 
   void checkclear() {
     int clears = 0;
     lll ngrid = 0;
     int h = H - 1;
-    lll rmsk = (lll(1) << W) - 1;
+    lll rmsk = (ll(1) << W) - 1;
     for(int i = H - 1; i >= 0; --i) {
       lll row = (grid >> pos(0, i)) & rmsk;
       if (row != rmsk) {
@@ -182,7 +186,7 @@ namespace std {
     std::size_t operator()(const board &k) const
     {
       // Compute individual hash values for two data members and combine them using XOR and bit shifting
-      return (hash<ll>()(ll((k.grid << 64 >> 64) ^ (k.grid >> 64))));
+      return hash<lll>()(k.grid);
     }
   };
 }

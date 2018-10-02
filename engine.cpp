@@ -27,7 +27,7 @@ umap<board, int> outEdges(const board &cur, int pType) {
     )
 #define rw(a) ((grid >> pos(0,a)) & rmsk)
 vector<lll> swapRows(lll grid) {
-  lll rmsk = (lll(1) << W) - 1;
+  lll rmsk = (ll(1) << W) - 1;
   lll a = rw(0), b = rw(1), c = rw(2), d = rw(3);
 
   vector<lll> ret;
@@ -67,7 +67,7 @@ umap<board, int> inEdges(const board &cur, int pType) {
         for(int j = -2; j < H; ++j) {
           p.dxy.y = j;
           lll pp = p.blocks();
-          if (!(pp & border)) {
+          if ((pp & border) == 0) {
             if ((pp & grid) == pp) {
               board b;
               b.grid = grid & ~pp;

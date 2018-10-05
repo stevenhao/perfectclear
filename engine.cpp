@@ -192,11 +192,6 @@ gameState beamSearch(const vector<gameState> cur, int depth, bool first=false) {
     g.failed = true;
     return g;
   }
-  for(int i = 0; i < 2; ++i) {
-    if (i < sz(cur)) {
-      disp(cur[i].board);
-    }
-  }
   vector<gameState> nxt;
   for (auto g: cur) {
     vector<gameState> lst = getNextGameStates(g);
@@ -220,7 +215,6 @@ gameState beamSearch(const vector<gameState> cur, int depth, bool first=false) {
   vector<gameState> filtered;
   for(int i = 0; i < BEAM_SEARCH_LIMIT; ++i) {
     if (i < sz(scores)) {
-      if (i < 10) printf("score=%d\t", scores[i].first);
       int idx = scores[i].second;
       filtered.push_back(nxt[idx]);
     }
@@ -239,7 +233,42 @@ struct engineResult {
   int happy;
 };
 
+bool eq(vector<int> q1, vector<int> q2) {
+  if (sz(q1) < 2 || sz(q2) < 2) return false;
+  if (q1[0] == q2[0] && q1[1] == q2[1]) {
+    return true;
+  }
+  if (q1[0] == q2[1] && q1[1] == q2[0]) return true;
+  return false;
+}
+
+board lastB;
+vector<int> lastP;
+vector<piece> lastT;
 engineResult getBestMove(board b, vector<int> pieces) {
+  if (b.grid != lastB.grid) {
+    printf("not g\n");
+    disp(b.grid);
+    disp(lastB.grid);
+  }
+  if (!eq(pieces, lastP)) {
+    printf("not p\n");
+    if (sz(lastP) >= 2 && sz(pieces) >= 2) {
+      printf("pieces=%d,%d, lastP = %d,%d\n", pieces[0], pieces[1], lastP[0], lastP[1]);
+    }
+  }
+  if (b.grid == lastB.grid && sz(lastP) && sz(pieces) && eq(pieces, lastP) && sz(lastT)) {
+    printf("short circuiting\n");
+    piece p = lastT[0];
+    lastT.erase(lastT.begin());
+    lastB.add(p);
+    if (p.pieceType == lastP[0]) {
+      lastP.erase(lastP.begin());
+    } else if (sz(lastP) > 1) {
+      lastP.erase(lastP.begin() + 1);
+    }
+    return {p, 1};
+  }
   // beam search
   for(int i = 0; i < 4; ++i) {
     checkpoints[i] = 0;
@@ -252,7 +281,18 @@ engineResult getBestMove(board b, vector<int> pieces) {
   gameState g = can({b, pieces}, true);
   if (!g.failed) {
     printf("IT IS POSSIBLE\n");
-    return {g.trace[0], 1};
+    lastB = b;
+    lastP = pieces;
+    lastT = g.trace;
+    piece p = lastT[0];
+    lastB.add(p);
+    if (p.pieceType == pieces[0]) {
+      lastP.erase(lastP.begin());
+    } else {
+      lastP.erase(lastP.begin() + 1);
+    }
+    lastT.erase(lastT.begin());
+    return {p, 1};
   } else {
     printf("BAD\n");
     if (sz(g.trace)) {

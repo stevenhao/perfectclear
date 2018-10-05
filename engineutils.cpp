@@ -7,7 +7,7 @@ using namespace std;
 umap<piece, int> vis;
 umap<piece, pair<piece, int> > trace;
 piece queue[MAXN*MAXN*5];
-
+umap<lll, bool> seen;
 int ql, qr;
 void psh(piece cur, piece prv, int move) {
   if (vis[cur]) return;
@@ -22,11 +22,16 @@ vector<piece> bfs(board &b, piece initial) {
   trace.clear();
   ql = qr = 0;
   psh(initial, piece(), -1);
+  seen.clear();
 
   vector<piece> ret;
   while (ql < qr) {
     piece cur = queue[ql]; ++ql;
     if (rest(cur, b)) {
+      board nb;
+      nb.add(cur);
+      if (seen[nb.grid]) continue;
+      seen[nb.grid] = true;
       ret.push_back(cur);
     }
     for(int move = 0; move < MOVES; ++move) {

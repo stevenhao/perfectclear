@@ -64,7 +64,7 @@ umap<board, int> inEdges(const board &cur, int pType) {
       p.dt = t;
       for(int i = -2; i < W; ++i) {
         p.dxy.x = i;
-        for(int j = -2; j < H; ++j) {
+        for(int j = -3; j < H; ++j) {
           p.dxy.y = j;
           lll pp = p.blocks();
           if ((pp & border) == 0) {
@@ -83,12 +83,8 @@ umap<board, int> inEdges(const board &cur, int pType) {
   return ret;
 }
 
-void precompute() {
-
-}
-
-
 piece getBestMove(board b, vector<int> pieces) {
+  // beam search
   vector<piece> v = getMoves(b, pieces[0]);
   printf("Found %lu moves\n", v.size());
   piece bestMove = v.back();

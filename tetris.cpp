@@ -89,11 +89,12 @@ struct piece {
 
   piece(int pType) : pieceType(pType) {
     dxy = centers[pType];
+    dxy.y += H - 6;
     dt = 0;
   }
 
   lll blocks() {
-    return pieces[pieceType][dt] << pos(dxy.x, dxy.y + H - 6);
+    return pieces[pieceType][dt] << pos(dxy.x, dxy.y);
   }
 
   piece() {}

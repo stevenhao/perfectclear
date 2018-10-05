@@ -72,12 +72,14 @@ string handleRequest(string input) {
       vector<int> pieces = readPieces(j["pieces"]);
       piece initial = piece(pieces[0]);
       disp(b, initial);
-      piece bestMove = getBestMove(b, pieces);
-      vector<int> path = getPath(b, bestMove, initial);
-      disp(b, bestMove);
+      engineResult result = getBestMove(b, pieces);
+      vector<int> path = getPath(b, result.move, initial);
+      int happy = result.happy;
+      disp(b, result.move);
 
       json ret;
       ret["path"] = path;
+      ret["happy"] = happy;
       json msg;
       msg["body"] = ret;
       msg["reqid"] = reqid;

@@ -41,9 +41,9 @@ $ ->
         setColor($board, x, y, color)
 
   renderCounter = (counter) ->
-    print 'counter', counter
+    print 'counter', counter.clears, counter.pieces
     $counter = $('#counter')
-    $counter.text(counter)
+    $counter.text(counter.clears + '/' + counter.pieces)
 
   renderBoardWithPiece = (board, piece) -> 
     print 'rendering', piece
@@ -155,7 +155,10 @@ $ ->
       ShiftRight: swapHold,
     }
 
-    counter = 0
+    counter = {
+      pieces: 0,
+      clears: 0,
+    }
 
     AIcommands = [Piece.rotateA, Piece.rotateB, Piece.moveLeft, Piece.moveRight, Piece.hardDrop, swapHold]
 
@@ -197,9 +200,10 @@ $ ->
           curPiece = nextPiece()
           renderBoardWithPiece(board, curPiece)
           renderPreview(preview)
+          counter.pieces += 1
           if Board.isEmpty(board)
-            counter += 1
-            renderCounter(counter)
+            counter.clears += 1
+          renderCounter(counter)
         false
       else if !Board.canAddPiece(board, curPiece)
         false
@@ -212,14 +216,69 @@ $ ->
         print 'cannot do', code
         true
 
+
+    autoplayStep = () ->
+      aiMove (data) ->
+        if data.happy
+          $('#happy-indicator').text('🐻')
+        else
+          $('#happy-indicator').text('😵')
+        print data.path
+        # animate 500 ms
+        path = data.path
+        animationTime = 500
+        interval = animationTime / (path.length + 1)
+        time = 0
+        curPiece = Piece.create(curPiece.pieceType, board)
+        path.forEach (mv) ->
+          curPiece = AIcommands[mv](curPiece, board)
+          print 'drawing ', draw, 'at ', time
+          draw = curPiece
+          time += interval
+          setTimeout ->
+            renderBoardWithPiece(board, draw)
+          , time
+        setTimeout ->
+          renderBoardWithPiece(board, curPiece)
+        , animationTime
+        setTimeout ->
+          if !Board.canAddPiece(board, curPiece)
+            Board.reset(board)
+            bag = nextBag
+            nextBag = makeBag()
+            hold = null
+            curPiece = nextPiece()
+            renderHold(hold)
+            renderBoardWithPiece(board, curPiece)
+            renderPreview(preview)
+          else
+            curPiece = Piece.hardDrop(curPiece, board)
+            board = Board.addPiece(board, curPiece)
+            curPiece = nextPiece()
+            renderBoardWithPiece(board, curPiece)
+            renderPreview(preview)
+            counter.pieces += 1
+            if Board.isEmpty(board)
+              counter.clears += 1
+            renderCounter(counter)
+          false
+        , animationTime
+        setTimeout(autoplayStep, 1000)
+
+    $('#autoplay').click (evt) ->
+      if autoplaying
+        autoplaying = false
+      else
+        autoplaying = true
+        autoplayStep()
+
     $('#piece-send').click (evt) ->
-      print board
       aiMove (data) ->
         print data.path
         # animate 1000 ms
         path = data.path
         animationTime = 1000
-        interval = animationTime / path.length
+        interval = animationTime / (path.length + 1)
         time = 0
         curPiece = Piece.create(curPiece.pieceType, board)
         path.forEach (mv) ->

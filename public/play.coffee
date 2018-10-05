@@ -130,6 +130,20 @@ $ ->
     preview = bag.slice(0, 6)
     hold = null
 
+    swapHold = (curPiece, board) ->
+      console.log('swaphold', curPiece, board)
+      cType = curPiece.pieceType
+      if hold
+        curPiece = Piece.create(hold, board)
+      else
+        curPiece = nextPiece()
+      hold = cType
+      console.log(curPiece)
+      renderBoardWithPiece(board, curPiece)
+      renderHold(hold)
+      renderPreview(preview)
+      curPiece
+
     commands = {
       ArrowLeft: Piece.moveLeft,
       ArrowRight: Piece.moveRight,
@@ -137,14 +151,18 @@ $ ->
       ArrowUp: Piece.rotateA,
       KeyX: Piece.rotateA,
       KeyZ: Piece.rotateB
+      ShiftLeft: swapHold,
+      ShiftRight: swapHold,
     }
 
     counter = 0
 
-    AIcommands = [Piece.rotateA, Piece.rotateB, Piece.moveLeft, Piece.moveRight, Piece.hardDrop]
+    AIcommands = [Piece.rotateA, Piece.rotateB, Piece.moveLeft, Piece.moveRight, Piece.hardDrop, swapHold]
 
     aiMove = (callback) ->
       p = [curPiece.pieceType].concat(preview)
+      if hold
+        p = [curPiece.pieceType, hold].concat(preview)
       [w, h] = getDims($board)
       $.post "/ai", { board: {W: w, H: h, data: Board.encode(board)}, pieces: p }, callback
 
@@ -185,17 +203,6 @@ $ ->
         false
       else if !Board.canAddPiece(board, curPiece)
         false
-      else if code == 'ShiftLeft' || code == 'ShiftRight'
-        cType = curPiece.pieceType
-        if hold
-          curPiece = Piece.create(hold, board)
-        else
-          curPiece = nextPiece()
-        hold = cType
-        renderBoardWithPiece(board, curPiece)
-        renderHold(hold)
-        renderPreview(preview)
-        false
       else if commands[code]?
         fn = commands[code]
         curPiece = fn(curPiece, board)
@@ -216,9 +223,9 @@ $ ->
         time = 0
         curPiece = Piece.create(curPiece.pieceType, board)
         path.forEach (mv) ->
-          draw = curPiece
-          print 'drawing ', draw, 'at ', time
           curPiece = AIcommands[mv](curPiece, board)
+          print 'drawing ', draw, 'at ', time
+          draw = curPiece
           time += interval
           setTimeout ->
             renderBoardWithPiece(board, draw)

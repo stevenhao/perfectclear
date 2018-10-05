@@ -70,11 +70,11 @@ string handleRequest(string input) {
       int reqid = j["reqid"].get<int>();
       board b = readBoard(j["board"]);
       vector<int> pieces = readPieces(j["pieces"]);
-      piece bestMove = getBestMove(b, pieces);
-      vector<int> path = getPath(b, bestMove);
-      disp(b, bestMove);
       piece initial = piece(pieces[0]);
       disp(b, initial);
+      piece bestMove = getBestMove(b, pieces);
+      vector<int> path = getPath(b, bestMove, initial);
+      disp(b, bestMove);
 
       json ret;
       ret["path"] = path;
@@ -91,7 +91,6 @@ string handleRequest(string input) {
 
 int main(int argc, char *argv[])
 {
-  precompute();
   loadData();
   /*  stringstream ss;
       ss << cin.rdbuf();

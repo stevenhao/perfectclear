@@ -52,7 +52,7 @@ inline void _set(lll &a, int p, int v) {
 /*
  * grid -> bit index
  */
-inline int abspos(int x, int y) { // 13 x 9 grid
+inline int abspos(int x, int y) { // (W + 3) x (H + 3) grid
   return y * 13 + x;
 }
 
@@ -157,20 +157,13 @@ struct board {
   }
 
   void checkclear() {
-    int clears = 0;
     lll ngrid = 0;
-    int h = H - 1;
     lll rmsk = (ll(1) << W) - 1;
-    for(int i = H - 1; i >= 0; --i) {
+    for(int i = H; i >= 0; --i) {
       lll row = (grid >> pos(0, i)) & rmsk;
       if (row != rmsk) {
-        ngrid |= row << pos(0, h);
-        --h;
+        ngrid = (ngrid << 13) | (row << pos(0, 0));
       }
-    }
-    while (h >= 0) {
-      ngrid |= rmsk << pos(0, h);
-      --h;
     }
     grid = ngrid;
   }

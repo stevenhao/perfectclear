@@ -23,8 +23,9 @@ app.get '/', (req, res) ->
 requests = {}
 reqCnt = 0
 
+port = process.argv[2] || 4445
 net = require('net');
-client = net.createConnection {port: 4445}, -> 
+client = net.createConnection {port}, -> 
   # 'connect' listener
   console.log('connected to server!');
 

@@ -43,14 +43,23 @@ vector<piece> getMoves(board b, int pType) {
   return ret;
 }
 
-vector<int> getPath(board b, piece p) { // returns info on most recent getMoves
+vector<int> getPath(board b, piece p, piece inHand) { // returns info on most recent getMoves
   vector<int> ans;
   piece initial = piece(p.pieceType);
+  bfs(b, initial);
+  if (!vis[p]) {
+    printf("ILLEGAL MOVE!\n");
+    return ans;
+  }
   while (!(p == initial)) {
     piece n = trace[p].x;
     int move = trace[p].y;
     ans.push_back(move);
     p = n;
+  }
+  if (p.pieceType != inHand.pieceType) {
+    // first swap
+    ans.push_back(5);
   }
   reverse(ans.begin(), ans.end());
   return ans;

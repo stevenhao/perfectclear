@@ -10,7 +10,7 @@ Let's get a perfect clear!
 
 ## Run the web server
 - `yarn global add coffeescript`
-- `coffee index.coffee`
+- `coffee index.coffee 4445`
 
 ## Open the app
 - Open `localhost:4444`

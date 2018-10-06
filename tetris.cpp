@@ -97,9 +97,14 @@ struct piece {
     return pieces[pieceType][dt] << pos(dxy.x, dxy.y);
   }
 
-  piece() {}
+  piece() {
+  }
   bool operator==(const piece &o) const {
     return pieceType == o.pieceType && dxy == o.dxy && dt == o.dt;
+  }
+
+  bool isNull() {
+    return *this == piece();
   }
 };
 

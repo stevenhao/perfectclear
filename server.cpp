@@ -61,7 +61,6 @@ vector<int> readPieces(json j) {
 }
 
 string handleRequest(string input) {
-  cout << "handling req [" << input << "]\n";
   if (!input.size()) return "";
   try {
     auto j = json::parse(input);
@@ -71,7 +70,6 @@ string handleRequest(string input) {
       board b = readBoard(j["board"]);
       vector<int> pieces = readPieces(j["pieces"]);
       piece initial = piece(pieces[0]);
-      disp(b, initial);
       engineResult result = getBestMove(b, pieces);
       vector<int> path = getPath(b, result.move, initial);
       int happy = result.happy;
@@ -132,7 +130,6 @@ int main(int argc, char *argv[])
       n = read(newsockfd,buffer,255);
       if (n < 0) { cerr << "ERROR reading from socket\n"; break; }
       string res = handleRequest(string(buffer));
-      cout << res << "\n";
       if (res.size()) {
         n = write(newsockfd, res.c_str(), res.size());
       } else {

@@ -217,12 +217,19 @@ $ ->
         true
 
 
+    stopWhenHappy = false
+    autoplaying = false
     autoplayStep = () ->
       aiMove (data) ->
-        if data.happy
+        if data.happy > 0
           $('#happy-indicator').text('🐻')
+          if (stopWhenHappy)
+            $('#autoplay').click()
+            return
         else
-          $('#happy-indicator').text('😵')
+          $('#happy-indicator').text('😐')
+          if data.happy < 0
+            $('#happy-indicator').text('😵')
         print data.path
         # animate 500 ms
         path = data.path
@@ -263,12 +270,15 @@ $ ->
             renderCounter(counter)
           false
         , animationTime
-        setTimeout(autoplayStep, 1000)
+        if autoplaying
+          setTimeout(autoplayStep, 1000)
 
     $('#autoplay').click (evt) ->
       if autoplaying
+        $('#autoplay').text('Autoplay')
         autoplaying = false
       else
+        $('#autoplay').text('Pause')
         autoplaying = true
         autoplayStep()
 

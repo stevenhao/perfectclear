@@ -10,13 +10,15 @@ struct gameState {
   board board;
   vector<int> queue;
   vector<piece> trace;
-  bool failed;
   bool isCleared() {
     return board.grid == 0;
   }
 };
 
-gameState noGame({ board(), vector<int>(), vector<piece>() ,true });
+struct searchResult {
+  vector<gameState> gameStates;
+  bool failed;
+};
 
 bool badHeight(gameState &gameState) {
   for (int i = 4; i < H; ++i) {
@@ -174,23 +176,23 @@ vector<gameState> getNextGameStates(const gameState &g) {
 
 const int BEAM_SEARCH_LIMIT = 500;
 
-gameState beamSearch(const vector<gameState> cur, int depth, bool first=false) {
-  printf("BEAMSEARCH %d %d\n", sz(cur), depth);
+searchResult beamSearch(const vector<gameState> cur, int depth, bool first=false) {
   if (!first) {
     for (auto g: cur) {
       if (g.isCleared()) {
         printf("IT IS CLEARED!");
-        return g;
+        searchResult s;
+        s.gameStates.push_back(g);
+        s.failed = false;
+        return s;
       }
     }
   }
   if (depth == 0) {
-    gameState g = noGame;
-    if (sz(cur) > 0) {
-      g = cur[0];
-    }
-    g.failed = true;
-    return g;
+    searchResult s;
+    s.gameStates = cur;
+    s.failed = true;
+    return s;
   }
   vector<gameState> nxt;
   for (auto g: cur) {
@@ -206,12 +208,6 @@ gameState beamSearch(const vector<gameState> cur, int depth, bool first=false) {
   }
   sort(scores.begin(), scores.end());
 
-  printf("Checkpoints:\n");
-  for(int i = 0; i < 4; ++i) {
-    printf("%d\t", checkpoints[i]);
-  }
-  printf("\n");
-
   vector<gameState> filtered;
   for(int i = 0; i < BEAM_SEARCH_LIMIT; ++i) {
     if (i < sz(scores)) {
@@ -220,12 +216,6 @@ gameState beamSearch(const vector<gameState> cur, int depth, bool first=false) {
     }
   }
   return beamSearch(filtered, depth - 1);
-}
-
-gameState can(const gameState &g, bool skip=false) {
-  vector<gameState> v(1);
-  v[0] = g;
-  return beamSearch(v, sz(g.queue), skip);
 }
 
 struct engineResult {
@@ -242,21 +232,30 @@ bool eq(vector<int> q1, vector<int> q2) {
   return false;
 }
 
+piece getMostPopular(vector<gameState> &gameStates) {
+  piece m;
+  umap<piece, int> counts;
+  double total = 0;
+  for (auto &g: gameStates) {
+    if (!sz(g.trace)) continue;
+    piece p = g.trace[0];
+    counts[p] += 1;
+    total += 1;
+    if (counts[p] > counts[m]) {
+      m = p;
+    }
+  }
+  if (total) {
+    printf("mostPopular: %Lf\n", counts[m] / (total));
+  }
+  return m;
+}
+
 board lastB;
 vector<int> lastP;
 vector<piece> lastT;
+
 engineResult getBestMove(board b, vector<int> pieces) {
-  if (b.grid != lastB.grid) {
-    printf("not g\n");
-    disp(b.grid);
-    disp(lastB.grid);
-  }
-  if (!eq(pieces, lastP)) {
-    printf("not p\n");
-    if (sz(lastP) >= 2 && sz(pieces) >= 2) {
-      printf("pieces=%d,%d, lastP = %d,%d\n", pieces[0], pieces[1], lastP[0], lastP[1]);
-    }
-  }
   if (b.grid == lastB.grid && sz(lastP) && sz(pieces) && eq(pieces, lastP) && sz(lastT)) {
     printf("short circuiting\n");
     piece p = lastT[0];
@@ -278,9 +277,13 @@ engineResult getBestMove(board b, vector<int> pieces) {
     printf("%d\t", checkpoints[i]);
   }
   printf("\n");
-  gameState g = can({b, pieces}, true);
-  if (!g.failed) {
+
+  vector<gameState> inp(1);
+  inp[0] = {b, pieces};
+  searchResult res = beamSearch(inp, sz(pieces), true);
+  if (!res.failed) {
     printf("IT IS POSSIBLE\n");
+    gameState g = res.gameStates[0];
     lastB = b;
     lastP = pieces;
     lastT = g.trace;
@@ -295,8 +298,9 @@ engineResult getBestMove(board b, vector<int> pieces) {
     return {p, 1};
   } else {
     printf("BAD\n");
-    if (sz(g.trace)) {
-      return {g.trace[0], 0};
+    piece p = getMostPopular(res.gameStates);
+    if (!p.isNull()) {
+      return {p, 0};
     }
   }
   vector<piece> v = getMoves(b, pieces[0]);

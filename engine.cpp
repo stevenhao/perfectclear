@@ -133,11 +133,11 @@ int getScore(gameState gameState) {
   checkpoints[0]++;
   // check for immediate fails
   if (badHeight(gameState)) {
-    return -1;
+    return -3;
   }
   checkpoints[1]++;
   if (badMod4(gameState)) {
-    return -1;
+    return -2;
   }
   checkpoints[2]++;
   if (badHoles(gameState)) {
@@ -236,11 +236,13 @@ piece getMostPopular(vector<gameState> &gameStates) {
   piece m;
   umap<piece, int> counts;
   double total = 0;
+  double f = 1;
   for (auto &g: gameStates) {
     if (!sz(g.trace)) continue;
     piece p = g.trace[0];
-    counts[p] += 1;
-    total += 1;
+    counts[p] += f;
+    total += f;
+    f *= 0.9;
     if (counts[p] > counts[m]) {
       m = p;
     }

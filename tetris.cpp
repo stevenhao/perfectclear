@@ -98,6 +98,7 @@ struct piece {
   }
 
   piece() {
+    pieceType = -1;
   }
   bool operator==(const piece &o) const {
     return pieceType == o.pieceType && dxy == o.dxy && dt == o.dt;

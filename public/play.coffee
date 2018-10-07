@@ -269,9 +269,9 @@ $ ->
               counter.clears += 1
             renderCounter(counter)
           false
-        , animationTime
+        , animationTime + 500
         if autoplaying
-          setTimeout(autoplayStep, 1000)
+          setTimeout(autoplayStep, animationTime + 1000)
 
     $('#autoplay').click (evt) ->
       if autoplaying

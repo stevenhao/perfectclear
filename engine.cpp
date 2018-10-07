@@ -234,7 +234,7 @@ bool eq(vector<int> q1, vector<int> q2) {
 
 piece getMostPopular(vector<gameState> &gameStates) {
   piece m;
-  umap<piece, int> counts;
+  umap<piece, double> counts;
   double total = 0;
   double f = 1;
   for (auto &g: gameStates) {
@@ -248,7 +248,7 @@ piece getMostPopular(vector<gameState> &gameStates) {
     }
   }
   if (total) {
-    printf("mostPopular: %Lf\n", counts[m] / (total));
+    printf("mostPopular: %lf, %lf\n",  counts[m], counts[m] / (total));
   }
   return m;
 }
@@ -274,11 +274,6 @@ engineResult getBestMove(board b, vector<int> pieces) {
   for(int i = 0; i < 4; ++i) {
     checkpoints[i] = 0;
   }
-  printf("beam search %d %d\n", pieces[0], pieces[1]);
-  for(int i = 0; i < 4; ++i) {
-    printf("%d\t", checkpoints[i]);
-  }
-  printf("\n");
 
   vector<gameState> inp(1);
   inp[0] = {b, pieces};
@@ -303,6 +298,8 @@ engineResult getBestMove(board b, vector<int> pieces) {
     piece p = getMostPopular(res.gameStates);
     if (!p.isNull()) {
       return {p, 0};
+    } else {
+      printf("piece %d is null :(\n", p.pieceType);
     }
   }
   vector<piece> v = getMoves(b, pieces[0]);

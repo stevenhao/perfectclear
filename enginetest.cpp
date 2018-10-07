@@ -11,7 +11,6 @@ void go() {
 
 int main() {
   loadData();
-  printf("beam search %d %d\n", pieces[0], pieces[1]);
 
   go();
 }

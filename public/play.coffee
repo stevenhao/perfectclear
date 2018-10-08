@@ -178,13 +178,76 @@ $ ->
       ret
 
     curPiece = nextPiece()
-    print 'curPiece', curPiece
+
+    prevStates = []
+    nextStates = []
+    addHistory = (state) ->
+      prevStates.push(state)
+      if prevStates.length > 40
+        prevStates = prevStates.slice(20)
+
+    curState = () ->
+      ({
+        board: board,
+        curPiece: curPiece,
+        hold: hold,
+        bag: bag.slice(),
+        nextBag: nextBag.slice(),
+        preview: preview,
+      })
+
+    save = () ->
+      addHistory(curState())
+      nextStates = []
+
+    undo = () ->
+      if !prevStates.length then return
+      nextStates.push(curState())
+
+      state = prevStates.pop()
+      board = state.board
+      curPiece = state.curPiece
+      hold = state.hold
+      bag = state.bag
+      nextBag = state.nextBag
+      preview = state.preview
+      renderHold(hold)
+      renderBoardWithPiece(board, curPiece)
+      renderPreview(preview)
+
+    redo = () ->
+      if !nextStates.length then return
+      prevStates.push(curState())
+      state = nextStates.pop()
+      board = state.board
+      curPiece = state.curPiece
+      hold = state.hold
+      bag = state.bag
+      nextBag = state.nextBag
+      preview = state.preview
+      renderHold(hold)
+      renderBoardWithPiece(board, curPiece)
+      renderPreview(preview)
+
+    $('#undo').click(undo)
+    $('#redo').click(redo)
+
     movecount = 0
     renderBoardWithPiece(board, curPiece)
     renderPreview(preview)
+    $('button').on 'focus', (e) ->
+      this.blur()
+
     $('body').keydown (evt) ->
       code = evt.originalEvent.code
-      if code == 'Space'
+      console.log(evt, code)
+
+      if code == 'Minus'
+        undo()
+      else if code == 'Equal'
+        redo()
+      else if code == 'Space'
+        save()
         if !Board.canAddPiece(board, curPiece)
           Board.reset(board)
           bag = nextBag
@@ -209,18 +272,24 @@ $ ->
         false
       else if commands[code]?
         fn = commands[code]
+        console.log('before', curPiece)
         curPiece = fn(curPiece, board)
+        console.log('after', curPiece)
         renderBoardWithPiece(board, curPiece)
         false
       else
         print 'cannot do', code
         true
 
-
     stopWhenHappy = false
+    $('#stop-controller').on('change', (e) ->
+      stopWhenHappy = !!e.target.checked
+    )
     autoplaying = false
     autoplayStep = () ->
       aiMove (data) ->
+        if $('#happy-indicator').text() != '🐻'
+          $('#happy-indicator').text('🤓')
         if data.happy > 0
           $('#happy-indicator').text('🐻')
           if (stopWhenHappy)
@@ -234,6 +303,7 @@ $ ->
         # animate 500 ms
         path = data.path
         animationTime = 500
+        save()
         interval = animationTime / (path.length + 1)
         time = 0
         curPiece = Piece.create(curPiece.pieceType, board)

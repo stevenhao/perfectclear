@@ -33,17 +33,20 @@
         <div class="panel-heading">
         <h3 class="panel-title">💯💯💯💯💯</h3>
         </div>
-        <div class="panel-body" style="position:relative">
-          <button id="piece-send" type="button" class="btn btn-block">Send Next Piece</button>
+        <div class="panel-body" style="position:relative; text-align: center;">
+          <button tabIndex="-1" id="piece-send" type="button" class="btn btn-block">Send Next Piece</button>
           <button id="autoplay" type="button" class="btn btn-block">Autoplay</button>
-          <button onclick="function(){}" class="btn btn-block" id="happy-indicator">?</button>
+          <div><button class="btn " id="undo">Undo</button>
+          <button class="btn " id="redo">Redo</button>
+          </div>
+          <label style="cursor: pointer;"><input type="checkbox" id="stop-controller"/> Stop when solution is found</label>
         </div>
       </div>
     </div>
     <div class="col-md-6">
       <div class="panel panel-default">
         <div class="panel-heading">
-          <h3 class="panel-title">🤓🤓🤓🤓🤓</h3>
+          <h3 class="panel-title" id="happy-indicator">🤓</h3>
         </div>
         <div class="panel-body" style="position:relative">
           <div id="hold" style="float:left; margin-left:1em;position:relative;width:6em;height:6em; background-color: black">

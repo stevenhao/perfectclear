@@ -57,9 +57,9 @@ void loadCenters() {
 void loadKicks() {
   ifstream fin("kicks", ifstream::in);
   for(int i = 0; i < 2; ++i) {
-    for(int j = 0; j < 4; ++j) {
-      for(int k = 0; k < 2; ++k) {
-        int dt = (j + k) % 4;
+    for(int k = 0; k < 2; ++k) {
+      for(int j = 0; j < 4; ++j) {
+        int dt = j;
         vector<pii> &v = ((i == 1) ? Ikicks : Skicks)[dt][k];
         for(int t = 0; t < 5; ++t) {
           int x, y;

@@ -281,9 +281,13 @@ $ ->
         print 'cannot do', code
         true
 
+    faster = false
     stopWhenHappy = false
     $('#stop-controller').on('change', (e) ->
       stopWhenHappy = !!e.target.checked
+    )
+    $('#fast-controller').on('change', (e) ->
+      faster = !!e.target.checked
     )
     autoplaying = false
     autoplayStep = () ->
@@ -305,6 +309,8 @@ $ ->
           return
         path = data.path
         animationTime = 500
+        if faster
+          animationTime /= 10
         save()
         interval = animationTime / (path.length + 1)
         time = 0
@@ -341,9 +347,9 @@ $ ->
               counter.clears += 1
             renderCounter(counter)
           false
-        , animationTime + 500
+        , animationTime * 1.1
         if autoplaying
-          setTimeout(autoplayStep, animationTime + 1000)
+          setTimeout(autoplayStep, animationTime * 1.2)
 
     $('#autoplay').click (evt) ->
       if autoplaying

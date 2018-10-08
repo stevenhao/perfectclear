@@ -183,8 +183,8 @@ $ ->
     nextStates = []
     addHistory = (state) ->
       prevStates.push(state)
-      if prevStates.length > 40
-        prevStates = prevStates.slice(20)
+      if prevStates.length > 400
+        prevStates = prevStates.slice(200)
 
     curState = () ->
       ({
@@ -301,6 +301,8 @@ $ ->
             $('#happy-indicator').text('😵')
         print data.path
         # animate 500 ms
+        if !autoplaying
+          return
         path = data.path
         animationTime = 500
         save()

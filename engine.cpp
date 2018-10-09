@@ -7,11 +7,11 @@
 using namespace std;
 
 struct gameState {
-  board board;
+  board b;
   vector<int> queue;
   vector<piece> trace;
   bool isCleared() {
-    return board.grid == 0;
+    return b.grid == 0;
   }
 };
 
@@ -22,7 +22,7 @@ struct searchResult {
 
 bool badHeight(gameState &gameState) {
   for (int i = 4; i < H; ++i) {
-    if ((gameState.board.grid & rowmsk(i)) != 0) {
+    if ((gameState.b.grid & rowmsk(i)) != 0) {
       return true;
     }
   }
@@ -30,7 +30,7 @@ bool badHeight(gameState &gameState) {
 }
 
 bool badMod4(gameState &gameState) {
-  board &board = gameState.board;
+  board &board = gameState.b;
   int cur = 0;
   for(int i = 0; i < W; ++i) {
     int cnt = 0;
@@ -50,7 +50,7 @@ bool badMod4(gameState &gameState) {
 }
 
 bool badHoles(gameState &gameState) {
-  board &board = gameState.board;
+  board &board = gameState.b;
   for(int i = 0; i < W; ++i) {
     int cnt = 0;
     int cur;
@@ -73,7 +73,7 @@ bool badHoles(gameState &gameState) {
 }
 
 int countHoles(gameState &gameState) {
-  board &board = gameState.board;
+  board &board = gameState.b;
   int holes = 0;
   for(int i = 0; i < W; ++i) {
     for(int j = 0; j < 4; ++j) {
@@ -90,7 +90,7 @@ int countHoles(gameState &gameState) {
 }
 
 int countRowDependencies(gameState &gameState) {
-  board &board = gameState.board;
+  board &board = gameState.b;
   int holes = 0;
   for(int i = 0; i < W; ++i) {
     for(int j = 0; j < 4; ++j) {
@@ -107,7 +107,7 @@ int countRowDependencies(gameState &gameState) {
 }
 
 int countNeeded(gameState &gameState) {
-  board &board = gameState.board;
+  board &board = gameState.b;
   int cnt = 0;
   int height = 0;
   for(int i = 0; i < W; ++i) {

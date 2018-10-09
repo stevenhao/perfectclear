@@ -157,7 +157,7 @@ vector<gameState> getNextGameStates(const gameState &g) {
   vector<gameState> result;
   vector<int> queue = g.queue;
   vector<piece> trace = g.trace;
-  board bb = g.board;
+  board bb = g.b;
   for (int i = 0; i < 2; ++i) {
     if (i >= sz(g.queue)) continue;
     vector<piece> moves = getMoves(bb, queue[i]);

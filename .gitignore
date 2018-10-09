@@ -4,3 +4,4 @@ node_modules
 enginetest.dSYM
 *.dSYM
 *.pyc
+start.sh

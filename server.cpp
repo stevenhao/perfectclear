@@ -72,12 +72,23 @@ string handleRequest(string input) {
       piece initial = piece(pieces[0]);
       engineResult result = getBestMove(b, pieces);
       vector<int> path = getPath(b, result.move, initial);
-      int happy = result.happy;
-      disp(b, result.move);
+      piece p = result.move;
+      disp(b, p);
+      vector<string> pathStrings;
+      p = piece(p.pieceType);
+      pathStrings.push_back(toString(p));
+      for(auto i: path) {
+        p = apply(i, p, b);
+        pathStrings.push_back(toString(p));
+      }
+      b.add(p);
 
+      int happy = result.happy;
       json ret;
       ret["path"] = path;
       ret["happy"] = happy;
+      ret["pathStrings"] = pathStrings;
+      ret["board"] = toString(b);
       json msg;
       msg["body"] = ret;
       msg["reqid"] = reqid;

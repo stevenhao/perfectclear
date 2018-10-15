@@ -130,4 +130,28 @@ void disp(board b) {
   print(buf);
 }
 
+string toString(char buf[MAXN][MAXN]) {
+  string s;
+  for(int i = 0; i < H; ++i) {
+    buf[i][W] = '\0';
+    s += buf[i];
+    s += '\n';
+  }
+  return s;
+}
 
+string toString(board b) {
+  char buf[MAXN][MAXN];
+  clear(buf);
+  write(border, buf, 'O');
+  write(b.grid, buf, '*');
+  return toString(buf);
+}
+
+string toString(piece p) {
+  char buf[MAXN][MAXN];
+  clear(buf);
+  write(border, buf, 'O');
+  write(p.blocks(), buf, '+');
+  return toString(buf);
+}

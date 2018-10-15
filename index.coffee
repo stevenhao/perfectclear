@@ -34,10 +34,6 @@ client.on 'data', (data) ->
   print 'sending', msg
   requests[msg.reqid].send(msg.body)
 
-app.post '/security', (req, res) ->
-  print('got post on /security', req.body)
-  res.send('lol hi')
-
 app.post '/ai', (req, res) ->
   if req.body?
     msg = req.body
@@ -48,6 +44,3 @@ app.post '/ai', (req, res) ->
     client.write(JSON.stringify(msg));
   else
     res.send('bad request')
-
-
-module.exports = app

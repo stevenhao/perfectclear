@@ -167,7 +167,9 @@ $ ->
       if hold
         p = [curPiece.pieceType, hold].concat(preview)
       [w, h] = getDims($board)
-      $.post "/ai", { board: {W: w, H: h, data: Board.encode(board)}, pieces: p }, callback
+      msg = { board: {W: w, H: h, data: Board.encode(board)}, pieces: p }
+      console.log msg
+      $.post "/ai", msg, callback
 
     nextPiece = ->
       ret = Piece.create(bag.shift(), board)

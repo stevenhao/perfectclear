@@ -30,7 +30,7 @@ def to_coord(i, j, img_width, img_height, board_width, board_height):
         )
 
 def get_color(t, active=False):
-  return ImageColor.getrgb(['cyan', 'blue', 'orange', 'yellow', 'lime', 'purple', 'red'][t])
+  return ['#00ffff', '#00ffff', '#ffa500', '#ffff00', '#00ff00', '#800080', '#800080'][t]
 
 background_color = '#666666'
 

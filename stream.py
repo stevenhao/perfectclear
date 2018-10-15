@@ -138,12 +138,16 @@ class Game:
             }
 
 class Stream:
-    def __init__(self, width, height):
+    def __init__(self, width, height, video_fps, fps):
         self.game = Game(10, 10)
         self.width = width
         self.height = height
         self.path = None
         self.path_idx = 0
+        self.video_fps = video_fps
+        self.fps = fps
+        self.last_frame = None
+        self.counter = 0
 
     def get_path(self):
         data = self.game.to_json()
@@ -158,6 +162,9 @@ class Stream:
         print(self.path)
 
     def get_frame(self):
+        if not(self.last_frame is None) and self.counter < self.video_fps / self.fps:
+            self.counter += 1
+            return self.last_frame
         if not self.path:
             self.get_path()
         if self.path_idx == len(self.path):
@@ -171,7 +178,10 @@ class Stream:
             self.path_idx += 1
 
         #  print(np.random.rand(self.height, self.width, 3))
-        return np.asarray(result) / 256.
+        result = np.asarray(result) / 256.
+        self.last_frame = result
+        self.counter = 0
+        return result
         #  return np.random.rand(self.height, self.width, 3)
 
 
@@ -188,7 +198,9 @@ def main():
     width = 480
     height = 640
 
-    stream = Stream(width, height)
+    video_fps = 10
+    fps = 5
+    stream = Stream(width, height, video_fps, fps)
     if False:
         for i in range(5):
             stream.get_frame()
@@ -198,11 +210,11 @@ def main():
             twitch_stream_key=args.streamkey,
             width=width,
             height=height,
-            fps=5.,
+            fps=video_fps,
             crf=29,
             verbose=True) as videostream:
         while True:
-            if videostream.get_video_frame_buffer_state() < 5:
+            if videostream.get_video_frame_buffer_state() < 30:
                 frame = stream.get_frame()
                 videostream.send_video_frame(frame)
 

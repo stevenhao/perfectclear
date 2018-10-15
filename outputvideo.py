@@ -50,7 +50,8 @@ class TwitchOutputStream(object):
                  fps=30.,
                  ffmpeg_binary="ffmpeg",
                  enable_audio=False,
-                 verbose=False):
+                 verbose=False,
+                 crf=23):
         self.twitch_stream_key = twitch_stream_key
         self.width = width
         self.height = height
@@ -61,6 +62,7 @@ class TwitchOutputStream(object):
         self.ffmpeg_binary = ffmpeg_binary
         self.verbose = verbose
         self.audio_enabled = enable_audio
+        self.crf = crf
         try:
             self.reset()
         except OSError:
@@ -130,7 +132,7 @@ class TwitchOutputStream(object):
             '-b:v', '3000k',
             '-s', '%dx%d' % (self.width, self.height),
             #  '-preset', 'faster', '-tune', 'zerolatency',
-            '-crf', '23',
+            '-crf', str(self.crf),
             '-pix_fmt', 'yuv420p',
             # '-force_key_frames', r'expr:gte(t,n_forced*2)',
             '-minrate', '3000k', '-maxrate', '3000k',

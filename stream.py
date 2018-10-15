@@ -21,16 +21,16 @@ def make_bag():
     return shuffled(range(7))
 
 def to_coord(i, j, img_width, img_height, board_width, board_height):
-    size = 30
-    pad_left = (img_width - board_width * 30) / 2
-    pad_top = (img_height - board_height * 30) / 2
+    size = 40
+    pad_left = (img_width - board_width * size) / 2
+    pad_top = (img_height - board_height * size) / 2
     return (
             pad_left + j * size,
             pad_top + i * size
         )
 
 def get_color(t, active=False):
-  return ['#00ffff', '#00ffff', '#ffa500', '#ffff00', '#00ff00', '#800080', '#800080'][t]
+  return ['#00ffff', '#0000ff', '#ffa500', '#ffff00', '#00ff00', '#800080', '#ff0000'][t]
 
 background_color = '#666666'
 
@@ -169,7 +169,9 @@ class Stream:
             piece = self.path[self.path_idx]
             result = self.game.to_image(piece, self.width, self.height)
             self.path_idx += 1
-        return np.asarray(result)
+
+        #  print(np.random.rand(self.height, self.width, 3))
+        return np.asarray(result) / 256.
         #  return np.random.rand(self.height, self.width, 3)
 
 
@@ -183,12 +185,12 @@ def main():
     args = parser.parse_args()
 
 
-    width = 640
-    height = 480
+    width = 480
+    height = 640
 
     stream = Stream(width, height)
     if False:
-        for i in range(50):
+        for i in range(5):
             stream.get_frame()
         return
 
@@ -197,6 +199,7 @@ def main():
             width=width,
             height=height,
             fps=5.,
+            crf=29,
             verbose=True) as videostream:
         while True:
             if videostream.get_video_frame_buffer_state() < 5:

@@ -1,4 +1,5 @@
 from __future__ import print_function
+import time
 from outputvideo import TwitchBufferedOutputStream
 import argparse
 import random
@@ -217,6 +218,8 @@ def main():
             if videostream.get_video_frame_buffer_state() < 30:
                 frame = stream.get_frame()
                 videostream.send_video_frame(frame)
+            else:
+                time.sleep(0.001)
 
 if __name__ == "__main__":
     main()

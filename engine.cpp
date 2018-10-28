@@ -7,11 +7,11 @@
 using namespace std;
 
 struct gameState {
-  board board;
+  board b;
   vector<int> queue;
   vector<piece> trace;
   bool isCleared() {
-    return board.grid == 0;
+    return b.grid == 0;
   }
 };
 
@@ -22,7 +22,7 @@ struct searchResult {
 
 bool badHeight(gameState &gameState) {
   for (int i = 4; i < H; ++i) {
-    if ((gameState.board.grid & rowmsk(i)) != 0) {
+    if ((gameState.b.grid & rowmsk(i)) != 0) {
       return true;
     }
   }
@@ -30,12 +30,12 @@ bool badHeight(gameState &gameState) {
 }
 
 bool badMod4(gameState &gameState) {
-  board &board = gameState.board;
+  board &b = gameState.b;
   int cur = 0;
   for(int i = 0; i < W; ++i) {
     int cnt = 0;
     for(int j = 0; j < 4; ++j) {
-      if (board.get(i, j)) {
+      if (b.get(i, j)) {
         ++cnt;
       } else {
         ++cur;
@@ -50,20 +50,20 @@ bool badMod4(gameState &gameState) {
 }
 
 bool badHoles(gameState &gameState) {
-  board &board = gameState.board;
+  board &b = gameState.b;
   for(int i = 0; i < W; ++i) {
     int cnt = 0;
     int cur;
     for(int j = 0; j < 4; ++j) {
-      if (board.get(i, j)) {
+      if (b.get(i, j)) {
         ++cnt;
       } else {
         cur = j;
       }
     }
     if (cnt == 3) {
-      if ((i + 1 == W || board.get(i + 1, cur)) &&
-          (i == 0 || board.get(i - 1, cur))) {
+      if ((i + 1 == W || b.get(i + 1, cur)) &&
+          (i == 0 || b.get(i - 1, cur))) {
         return true;
       }
     }
@@ -73,13 +73,13 @@ bool badHoles(gameState &gameState) {
 }
 
 int countHoles(gameState &gameState) {
-  board &board = gameState.board;
+  board &b = gameState.b;
   int holes = 0;
   for(int i = 0; i < W; ++i) {
     for(int j = 0; j < 4; ++j) {
-      if (!board.get(i, j) && board.get(i, j + 1)) {
-        if ((i + 1 == W || board.get(i + 1, j)) &&
-            (i == 0 || board.get(i - 1, j))) {
+      if (!b.get(i, j) && b.get(i, j + 1)) {
+        if ((i + 1 == W || b.get(i + 1, j)) &&
+            (i == 0 || b.get(i - 1, j))) {
           ++holes;
         }
       }
@@ -90,13 +90,13 @@ int countHoles(gameState &gameState) {
 }
 
 int countRowDependencies(gameState &gameState) {
-  board &board = gameState.board;
+  board &b = gameState.b;
   int holes = 0;
   for(int i = 0; i < W; ++i) {
     for(int j = 0; j < 4; ++j) {
-      if (!board.get(i, j) && board.get(i, j + 1)) {
-        if ((i + 1 == W || board.get(i + 1, j)) &&
-            (i == 0 || board.get(i - 1, j))) {
+      if (!b.get(i, j) && b.get(i, j + 1)) {
+        if ((i + 1 == W || b.get(i + 1, j)) &&
+            (i == 0 || b.get(i - 1, j))) {
           ++holes;
         }
       }
@@ -107,12 +107,12 @@ int countRowDependencies(gameState &gameState) {
 }
 
 int countNeeded(gameState &gameState) {
-  board &board = gameState.board;
+  board &b = gameState.b;
   int cnt = 0;
   int height = 0;
   for(int i = 0; i < W; ++i) {
     for(int j = 0; j < 4; ++j) {
-      if (board.get(i, j)) {
+      if (b.get(i, j)) {
         cnt++;
         if (j + 1 > height) {
           height = j + 1;
@@ -157,7 +157,7 @@ vector<gameState> getNextGameStates(const gameState &g) {
   vector<gameState> result;
   vector<int> queue = g.queue;
   vector<piece> trace = g.trace;
-  board bb = g.board;
+  board bb = g.b;
   for (int i = 0; i < 2; ++i) {
     if (i >= sz(g.queue)) continue;
     vector<piece> moves = getMoves(bb, queue[i]);

@@ -11,7 +11,7 @@ Let's get a perfect clear!
 ## Run the web server
 - `yarn global add coffeescript`
 - `yarn`
-- `coffee index.coffee 4445`
+- `coffee index.coffee 4445` (make sure `./server` is running in a separate process)
 
 ## Open the app
 - Open `localhost:4444`

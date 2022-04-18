@@ -174,7 +174,10 @@ vector<gameState> getNextGameStates(const gameState &g) {
   return result;
 }
 
-const int BEAM_SEARCH_LIMIT = 500;
+int beamSearchLimit = 500;
+void setBeamSearchLimit(int limit) {
+  beamSearchLimit = limit;
+}
 
 searchResult beamSearch(const vector<gameState> cur, int depth, bool first=false) {
   if (!first) {
@@ -209,7 +212,7 @@ searchResult beamSearch(const vector<gameState> cur, int depth, bool first=false
   sort(scores.begin(), scores.end());
 
   vector<gameState> filtered;
-  for(int i = 0; i < BEAM_SEARCH_LIMIT; ++i) {
+  for(int i = 0; i < beamSearchLimit; ++i) {
     if (i < sz(scores)) {
       int idx = scores[i].second;
       filtered.push_back(nxt[idx]);

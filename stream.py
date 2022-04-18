@@ -11,7 +11,7 @@ from PIL import Image, ImageDraw, ImageColor
 global_frame_num = 1
 
 def shuffled(lst):
-    lst = lst[:]
+    lst = list(lst[:])
     random.shuffle(lst)
     return lst
 

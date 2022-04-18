@@ -67,6 +67,12 @@ string handleRequest(string input) {
     cerr << j << "\n";
     if (j.is_object() && j["board"].is_object() && j["pieces"].is_array() && j["reqid"].is_number()) {
       int reqid = j["reqid"].get<int>();
+      int search_breadth = j["search_breadth"].get<int>();
+      if (search_breadth) {
+        setBeamSearchLimit(search_breadth);
+      } else {
+        setBeamSearchLimit(DEFAULT_SEARCH_BREADTH);
+      }
       board b = readBoard(j["board"]);
       vector<int> pieces = readPieces(j["pieces"]);
       piece initial = piece(pieces[0]);

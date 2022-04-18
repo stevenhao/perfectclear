@@ -199,7 +199,7 @@ piece rot(piece p, int dt) {
   return p;
 }
 
-piece trans(piece p, pii dxy) {
+piece trans(piece p, const pii &dxy) {
   p.dxy = p.dxy + dxy;
   return p;
 }

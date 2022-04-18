@@ -150,8 +150,9 @@ class Stream:
         self.last_frame = None
         self.counter = 0
 
-    def get_path(self):
+    def get_path(self, search_breadth):
         data = self.game.to_json()
+        data['search_breadth'] = search_breadth
         # print('POST', data)
         r = requests.post('http://127.0.0.1:4444/ai', json = data)
         result = r.json()
@@ -162,12 +163,12 @@ class Stream:
         self.path_idx = 0
         # print(self.path)
 
-    def get_frame(self):
+    def get_frame(self, search_breadth):
         if not(self.last_frame is None) and self.counter < self.video_fps / self.fps:
             self.counter += 1
             return self.last_frame
         if not self.path:
-            self.get_path()
+            self.get_path(search_breadth)
         if self.path_idx == len(self.path):
             self.game.add_piece(self.path[-1])
             result = self.game.to_image(None, self.width, self.height)
@@ -210,9 +211,11 @@ def main():
             crf=29,
             verbose=True) as videostream:
         while True:
-            if videostream.get_video_frame_buffer_state() < 1000:
-                videostream.send_video_frame(stream.get_frame())
-                print('Buffered frames:', videostream.get_video_frame_buffer_state())
+            buffer_state = videostream.get_video_frame_buffer_state()
+            if buffer_state < 1500:
+                search_breadth = 300 if buffer_state < 100 else 400 if buffer_state < 500 else 500 if buffer_state < 1000 else 600
+                videostream.send_video_frame(stream.get_frame(search_breadth))
+                print('Buffered frames:', videostream.get_video_frame_buffer_state(), 'Search breadth', search_breadth)
             else:
                 time.sleep(0.001)
 

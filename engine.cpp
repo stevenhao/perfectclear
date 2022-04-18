@@ -174,9 +174,11 @@ vector<gameState> getNextGameStates(const gameState &g) {
   return result;
 }
 
+const int DEFAULT_SEARCH_BREADTH = 500;
 int beamSearchLimit = 500;
 void setBeamSearchLimit(int limit) {
   beamSearchLimit = limit;
+  printf("Beam search limit is now %d\n", limit);
 }
 
 searchResult beamSearch(const vector<gameState> cur, int depth, bool first=false) {

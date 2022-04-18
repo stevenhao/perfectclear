@@ -199,14 +199,9 @@ def main():
     width = 480
     height = 640
 
-    video_fps = 10
+    video_fps = 15
     fps = 5
     stream = Stream(width, height, video_fps, fps)
-    if False:
-        for i in range(5):
-            stream.get_frame()
-        return
-
     with TwitchBufferedOutputStream(
             twitch_stream_key=args.streamkey,
             width=width,
@@ -215,9 +210,8 @@ def main():
             crf=29,
             verbose=True) as videostream:
         while True:
-            if videostream.get_video_frame_buffer_state() < 30:
-                frame = stream.get_frame()
-                videostream.send_video_frame(frame)
+            if videostream.get_video_frame_buffer_state() < 1000:
+                videostream.send_video_frame(stream.get_frame())
             else:
                 time.sleep(0.001)
 

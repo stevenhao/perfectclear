@@ -22,7 +22,9 @@ def draw_game(
     img_height
 ):
     board = [[None] * 10] * 10 + orig_board
-    cur_piece_blocks = [(y if y <= 2 else y + 10, x) for y, x in orig_cur_piece.blocks] if orig_cur_piece is not None else []
+    cur_piece_blocks = list(orig_cur_piece.blocks) if orig_cur_piece is not None else []
+    if all(y > 1 for y, x in cur_piece_blocks):
+        cur_piece_blocks = [(y + 10, x) for y, x in cur_piece_blocks]
     image = Image.new('RGB', (img_width, img_height))
     draw = ImageDraw.Draw(image)
     def rect(r, color):

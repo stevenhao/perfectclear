@@ -193,8 +193,8 @@ def main():
     args = parser.parse_args()
 
 
-    width = 480
-    height = 640
+    width = 960
+    height = 720
 
     video_fps = 15
     fps = 5

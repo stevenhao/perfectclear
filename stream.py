@@ -209,7 +209,7 @@ def main():
         while True:
             buffer_state = videostream.get_video_frame_buffer_state()
             if buffer_state < 1500:
-                search_breadth = 300 if buffer_state < 100 else 400 if buffer_state < 500 else 500 if buffer_state < 1000 else 600
+                search_breadth = 100 if buffer_state < 100 else 400 if buffer_state < 500 else 500 if buffer_state < 1000 else 600
                 videostream.send_video_frame(stream.get_frame(search_breadth))
                 print('Buffered frames:', videostream.get_video_frame_buffer_state(), 'Search breadth', search_breadth)
             else:

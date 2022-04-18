@@ -1,5 +1,6 @@
 from __future__ import print_function
 import time
+from draw import draw_game
 from outputvideo import TwitchBufferedOutputStream
 import argparse
 import random
@@ -8,8 +9,10 @@ import requests
 import json
 from PIL import Image, ImageDraw, ImageColor
 
-global_frame_num = 1
+from piece import Piece, get_color
 
+global_frame_num = 1
+PREVIEW_SIZE = 6
 def shuffled(lst):
     lst = list(lst[:])
     random.shuffle(lst)
@@ -30,22 +33,9 @@ def to_coord(i, j, img_width, img_height, board_width, board_height):
             pad_top + i * size
         )
 
-def get_color(t, active=False):
-  return ['#00ffff', '#0000ff', '#ffa500', '#ffff00', '#00ff00', '#800080', '#ff0000'][t]
-
 background_color = '#666666'
 
 piece_names = ['I', 'J', 'L', 'O', 'S', 'T', 'Z']
-
-class Piece:
-    def __init__(self, t, s):
-        self.t = t
-        self.blocks = []
-        rows = s.split('\n')
-        for i in range(len(rows)):
-            for j in range(len(rows[i])):
-                if rows[i][j] == '+':
-                    self.blocks.append((i, j))
 
 
 class Game:
@@ -90,6 +80,19 @@ class Game:
             text += '\n'
         return text
 
+    def to_image2(self, piece, img_width, img_height):
+        hold = self.queue[0]
+        cur = None
+        if piece is None:
+            preview = self.queue[1:-1]
+        else:
+            cur = self.queue[1]
+            preview = self.queue[2:]
+            if hold == piece.t:
+                hold, cur = cur, hold
+        board = self.board
+        return draw_game(hold, cur, piece, preview, board, img_width, img_height)
+
     def to_image(self, piece, width, height):
         global global_frame_num
         text = self.to_text(piece)
@@ -113,14 +116,7 @@ class Game:
                     draw.rectangle(xy, color)
         del draw
         return image
-        #  d = global_frame_num
-        #  global_frame_num += 1
-
-        #  path = 'tmpimg%s.png' % d
-        #  image.save(open(path, 'w'))
-        #  image = Image.open(open(path, 'r'))
-        #  image.show()
-
+        
     def to_json(self):
         data = ''
         for row in self.board:
@@ -134,7 +130,7 @@ class Game:
                 },
             'pieces': [
                 piece_names[i]
-                for i in self.queue
+                for i in self.queue[:PREVIEW_SIZE + 2]
                 ]
             }
 
@@ -163,7 +159,7 @@ class Stream:
         self.path_idx = 0
         # print(self.path)
 
-    def get_frame(self, search_breadth):
+    def get_frame(self, search_breadth=500):
         if not(self.last_frame is None) and self.counter < self.video_fps / self.fps:
             self.counter += 1
             return self.last_frame
@@ -171,12 +167,12 @@ class Stream:
             self.get_path(search_breadth)
         if self.path_idx == len(self.path):
             self.game.add_piece(self.path[-1])
-            result = self.game.to_image(None, self.width, self.height)
+            result = self.game.to_image2(None, self.width, self.height)
             self.path = None
             #  TODO: async-ly self.get_path()
         else:
             piece = self.path[self.path_idx]
-            result = self.game.to_image(piece, self.width, self.height)
+            result = self.game.to_image2(piece, self.width, self.height)
             self.path_idx += 1
 
         #  print(np.random.rand(self.height, self.width, 3))

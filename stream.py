@@ -94,12 +94,12 @@ class Game:
         global global_frame_num
         text = self.to_text(piece)
         blocks = piece.blocks if piece else []
-        print(text)
+        # print(text)
         image = Image.new('RGB', (width, height))
         draw = ImageDraw.Draw(image)
         tc = lambda i, j: to_coord(i, j, width, height, self.width, self.height)
         board_boundary = [tc(0, 0), tc(self.height, self.width)]
-        print(board_boundary, background_color)
+        # print(board_boundary, background_color)
         draw.rectangle(board_boundary, background_color)
         for i in range(self.height):
             for j in range(self.width):
@@ -109,7 +109,7 @@ class Game:
                     draw.rectangle(xy, color)
                 elif (i, j) in blocks:
                     color = get_color(piece.t, True)
-                    print(xy, color)
+                    # print(xy, color)
                     draw.rectangle(xy, color)
         del draw
         return image
@@ -125,7 +125,7 @@ class Game:
         data = ''
         for row in self.board:
             data += ''.join([str(t + 1 if t != None else 0) for t in row])
-        print(self.width, self.height, data)
+        # print(self.width, self.height, data)
         return {
             'board': {
                 'W': str(self.width),
@@ -152,7 +152,7 @@ class Stream:
 
     def get_path(self):
         data = self.game.to_json()
-        print('POST', data)
+        # print('POST', data)
         r = requests.post('http://127.0.0.1:4444/ai', json = data)
         result = r.json()
         path_strings = result['pathStrings']
@@ -160,7 +160,7 @@ class Stream:
         t = self.game.queue[idx]
         self.path = [Piece(t, s) for s in path_strings]
         self.path_idx = 0
-        print(self.path)
+        # print(self.path)
 
     def get_frame(self):
         if not(self.last_frame is None) and self.counter < self.video_fps / self.fps:
@@ -212,6 +212,7 @@ def main():
         while True:
             if videostream.get_video_frame_buffer_state() < 1000:
                 videostream.send_video_frame(stream.get_frame())
+                print('Buffered frames:', videostream.get_video_frame_buffer_state())
             else:
                 time.sleep(0.001)
 

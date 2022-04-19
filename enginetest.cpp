@@ -5,8 +5,12 @@ void go() {
   gameState g = {b, p};
   vector<gameState> v(1);
   v[0] = g;
-  beamSearch(v, sz(g.queue));
-
+  beamSearch(v, sz(g.queue), true);
+  printf("bfscount is %d\n", bfsCount);
+  printf("memo1 size is %d\n", int(memo1.size()));
+  printf("memo2 size is %d\n", int(memo2.size()));
+  printf("cache hits is %d\n", int(cacheHits));
+  printf("cache misses is %d\n", int(cacheMisses));
 }
 
 int main() {

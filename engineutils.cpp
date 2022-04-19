@@ -1,5 +1,6 @@
 #include "tetrisio.cpp"
 #include <unordered_map>
+#include <unordered_set>
 
 using namespace std;
 
@@ -17,7 +18,23 @@ void psh(piece cur, piece prv, int move) {
   ++qr;
 }
 
+const int MAX_MEMO_SIZE = 100000;
+ll cacheHits = 0;
+ll cacheMisses = 0;
+int bfsCount = 0;
+unordered_map<pair<lll, int>, vector<piece>> memo1, memo2;
 vector<piece> bfs(board &b, piece initial) {
+  pair<lll, int> key(b.grid, initial.pieceType);
+  if (memo1.count(key)) {
+    ++cacheHits;
+    return memo1[key];
+  }
+  if (memo2.count(key)) {
+    ++cacheHits;
+    return memo2[key];
+  }
+  ++cacheMisses;
+  ++bfsCount;
   vis.clear();
   trace.clear();
   ql = qr = 0;
@@ -39,6 +56,12 @@ vector<piece> bfs(board &b, piece initial) {
       psh(nxt, cur, move);
     }
   }
+  if (memo2.size() >= MAX_MEMO_SIZE) {
+    printf("CLEARING THE MEMO!!\n");
+    memo1 = memo2;
+    memo2.clear();
+  }
+  memo2[key] = ret;
   return ret;
 }
 

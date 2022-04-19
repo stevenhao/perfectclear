@@ -283,6 +283,7 @@ engineResult getBestMove(board b, vector<int> pieces) {
   vector<gameState> inp(1);
   inp[0] = {b, pieces};
   searchResult res = beamSearch(inp, sz(pieces), true);
+  printf("global cache hit rate %lf\n", 1. * cacheHits / (cacheHits + cacheMisses));
   if (!res.failed) {
     printf("IT IS POSSIBLE\n");
     gameState g = res.gameStates[0];

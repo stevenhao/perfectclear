@@ -25,6 +25,9 @@ def draw_game(
     cur_piece_blocks = list(orig_cur_piece.blocks) if orig_cur_piece is not None else []
     if all(y > 1 for y, x in cur_piece_blocks):
         cur_piece_blocks = [(y + 10, x) for y, x in cur_piece_blocks]
+    ghost_blocks = cur_piece_blocks
+    while all(y + 1 < len(board) and board[y + 1][x] is None for y, x in ghost_blocks):
+        ghost_blocks = [(y + 1, x) for y, x in ghost_blocks]
     image = Image.new('RGB', (img_width, img_height))
     draw = ImageDraw.Draw(image)
     def rect(r, color):
@@ -115,7 +118,8 @@ def draw_game(
                 color = get_color(board[i][j])
             elif (i, j) in cur_piece_blocks:
                 color = get_color(orig_cur_piece.t, True)
-                # print(xy, color)
+            elif (i, j) in ghost_blocks:
+                color = '#888888'
             else:
                 continue
             rect(((bx + j * c1, by + i * c1), (bx + (j + 1) * c1, by + (i + 1) * c1)), color)    

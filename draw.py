@@ -1,4 +1,4 @@
-from typing import List, Union
+from typing import List, Union, Tuple
 from PIL import Image, ImageDraw, ImageColor, ImageFont
 from piece import Piece, get_color
 
@@ -14,15 +14,14 @@ def get_piece(pt):
 
 def draw_game(
     hold: int, # = stream.game.queue[0]
-    cur: int, # = stream.game.queue[1]
-    orig_cur_piece: Union[Piece, None], # = stream.path[stream.path_idx]
+    cur_piece_blocks: List[Tuple[int, int]],
+    cur_piece_type: Union[int, None],
     preview: List[int], # = stream.game.queue[2:]
     orig_board: List[List[Union[int, None]]], # = stream.game.board
     img_width,
     img_height
 ):
     board = [[None] * 10] * 10 + orig_board
-    cur_piece_blocks = list(orig_cur_piece.blocks) if orig_cur_piece is not None else []
     if all(y > 1 for y, x in cur_piece_blocks):
         cur_piece_blocks = [(y + 10, x) for y, x in cur_piece_blocks]
     ghost_blocks = cur_piece_blocks
@@ -115,10 +114,14 @@ def draw_game(
             if board[i][j] != None:
                 color = get_color(board[i][j])
             elif (i, j) in cur_piece_blocks:
-                color = get_color(orig_cur_piece.t, True)
+                color = get_color(cur_piece_type, True)
             elif (i, j) in ghost_blocks:
                 color = '#888888'
             else:
                 continue
             rect(((bx + j * c1, by + i * c1), (bx + (j + 1) * c1, by + (i + 1) * c1)), color)    
     return image
+
+def draw_snapshot(snapshot, img_width, img_height):
+    (hold, cur_piece_blocks, cur_piece_type, preview, board) = snapshot
+    return draw_game(hold, cur_piece_blocks, cur_piece_type, preview, board, img_width, img_height)

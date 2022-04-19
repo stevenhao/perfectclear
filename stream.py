@@ -1,6 +1,6 @@
 from __future__ import print_function
 import time
-from draw import draw_game
+from draw import draw_game, draw_snapshot
 from outputvideo import TwitchBufferedOutputStream
 import argparse
 import random
@@ -37,6 +37,8 @@ background_color = '#666666'
 
 piece_names = ['I', 'J', 'L', 'O', 'S', 'T', 'Z']
 
+def clone_deep(obj):
+    return [clone_deep(x) for x in obj] if isinstance(obj, list) else obj
 
 class Game:
     def __init__(self, width, height):
@@ -91,31 +93,20 @@ class Game:
             if hold == piece.t:
                 hold, cur = cur, hold
         board = self.board
-        return draw_game(hold, cur, piece, preview, board, img_width, img_height)
+        return draw_game(hold, piece.blocks if piece is not None else [], piece.t if piece is not None else None, preview, board, img_width, img_height)
 
-    def to_image(self, piece, width, height):
-        global global_frame_num
-        text = self.to_text(piece)
-        blocks = piece.blocks if piece else []
-        # print(text)
-        image = Image.new('RGB', (width, height))
-        draw = ImageDraw.Draw(image)
-        tc = lambda i, j: to_coord(i, j, width, height, self.width, self.height)
-        board_boundary = [tc(0, 0), tc(self.height, self.width)]
-        # print(board_boundary, background_color)
-        draw.rectangle(board_boundary, background_color)
-        for i in range(self.height):
-            for j in range(self.width):
-                xy = [tc(i, j), tc(i + 1, j + 1)]
-                if self.board[i][j] != None:
-                    color = get_color(self.board[i][j])
-                    draw.rectangle(xy, color)
-                elif (i, j) in blocks:
-                    color = get_color(piece.t, True)
-                    # print(xy, color)
-                    draw.rectangle(xy, color)
-        del draw
-        return image
+    def snapshot(self, piece):
+        hold = self.queue[0]
+        cur = None
+        if piece is None:
+            preview = self.queue[1:-1]
+        else:
+            cur = self.queue[1]
+            preview = self.queue[2:]
+            if hold == piece.t:
+                hold, cur = cur, hold
+        board = self.board
+        return (hold, piece.blocks if piece is not None else [], piece.t if piece is not None else None, clone_deep(preview), clone_deep(board))
         
     def to_json(self):
         data = ''
@@ -145,6 +136,7 @@ class Stream:
         self.fps = fps
         self.last_frame = None
         self.counter = 0
+        self.snapshots = []
 
     def get_path(self, search_breadth):
         data = self.game.to_json()
@@ -159,29 +151,44 @@ class Stream:
         self.path_idx = 0
         # print(self.path)
 
-    def get_frame(self, search_breadth=500):
-        if not(self.last_frame is None) and self.counter < self.video_fps / self.fps:
-            self.counter += 1
-            return self.last_frame
+    def get_snapshot(self, search_breadth=500):
         if not self.path:
             self.get_path(search_breadth)
         if self.path_idx == len(self.path):
             self.game.add_piece(self.path[-1])
-            result = self.game.to_image2(None, self.width, self.height)
+            result = self.game.snapshot(None)
             self.path = None
-            #  TODO: async-ly self.get_path()
         else:
             piece = self.path[self.path_idx]
-            result = self.game.to_image2(piece, self.width, self.height)
             self.path_idx += 1
-
-        #  print(np.random.rand(self.height, self.width, 3))
-        result = np.asarray(result) / 256.
-        self.last_frame = result
-        self.counter = 0
+            result = self.game.snapshot(piece)
         return result
-        #  return np.random.rand(self.height, self.width, 3)
 
+    def get_frame(self):
+        if not(self.last_frame is None) and self.counter < self.video_fps / self.fps:
+            self.counter += 1
+            return self.last_frame
+        if len(self.snapshots) == 0:
+            self.prebuffer()
+        snapshot = self.snapshots[0]
+        self.snapshots = self.snapshots[1:]
+        frame_image = draw_snapshot(snapshot, self.width, self.height)
+        self.last_frame = np.asarray(frame_image) / 256
+        self.counter = 0
+        return self.last_frame
+    
+    def prebuffer(self):
+        MAX_SNAPSHOT_BUFFER = 3000
+        if len(self.snapshots) >= MAX_SNAPSHOT_BUFFER:
+            self.buffering = False
+            return
+        if len(self.snapshots) >= MAX_SNAPSHOT_BUFFER / 2 and not self.buffering:
+            print('Waiting...', len(self.snapshots))
+            return
+        print('Buffering...', len(self.snapshots))
+        self.buffering = True
+        search_breadth = 100 if len(self.snapshots) < 100 else 500
+        self.snapshots.append(self.get_snapshot(search_breadth))
 
 
 def main():
@@ -208,11 +215,10 @@ def main():
             verbose=True) as videostream:
         while True:
             buffer_state = videostream.get_video_frame_buffer_state()
-            if buffer_state < 1000:
-                search_breadth = 100 if buffer_state < 100 else 400 if buffer_state < 500 else 500 if buffer_state < 700 else 600
-                videostream.send_video_frame(stream.get_frame(search_breadth))
-                print('Buffered frames:', videostream.get_video_frame_buffer_state(), 'Search breadth', search_breadth)
+            if buffer_state < 100:
+                videostream.send_video_frame(stream.get_frame())
             else:
+                stream.prebuffer()
                 time.sleep(0.001)
 
 if __name__ == "__main__":

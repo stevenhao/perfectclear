@@ -202,6 +202,12 @@ pair<piece, double> getMostPopular(const vector<gameState> &gameStates) {
   return make_pair(m, ratio);
 }
 
+/*
+global cache hit rate 0.449898
+hardQueries: 618, cacheMisses: 1083343
+wins: 92, totalQueries: 975; ratio: 0.094359
+*/
+
 int earlyExitPopular = -1;
 searchResult beamSearch(const vector<gameState> cur, int depth, bool first=false) {
   if (!first) {

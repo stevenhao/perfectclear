@@ -243,17 +243,14 @@ searchResult beamSearch(const vector<gameState> cur, int depth, bool first=false
     vector<gameState> lst = getNextGameStates(g);
     nxt.insert(nxt.end(), lst.begin(), lst.end());
   }
-  printf("nxt gamestates: %d\n", int(nxt.size()));
   for(int i = 0; i < 4; ++i) {
     checkpoints[i] = 0;
   }
   vector<pii> scores(sz(nxt));
   for (int i = 0; i < sz(nxt); ++i) {
     scores[i] = pii(-getScore(nxt[i]), i);
-    printf("%d: %d\n", i, scores[i].first);
   }
   sort(scores.begin(), scores.end());
-  printf("Score: %d\n", scores[0].first);
   vector<gameState> filtered;
   for(int i = 0; i < beamSearchLimit; ++i) {
     if (i < sz(scores) && (scores[i].first <= 0 || i < 100)) {

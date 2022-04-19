@@ -181,6 +181,28 @@ void setBeamSearchLimit(int limit) {
   printf("Beam search limit is now %d\n", limit);
 }
 
+
+pair<piece, double> getMostPopular(const vector<gameState> &gameStates) {
+  piece m;
+  umap<piece, double> counts;
+  double total = 0;
+  double f = 1;
+  for (auto &g: gameStates) {
+    if (!sz(g.trace)) continue;
+    piece p = g.trace[0];
+    counts[p] += f;
+    total += f;
+    f *= 0.9;
+    if (counts[p] > counts[m]) {
+      m = p;
+    }
+  }
+  double ratio =  counts[m] / max(1., total);
+  printf("mostPopular: %lf, %lf\n",  counts[m], ratio);
+  return make_pair(m, ratio);
+}
+
+int earlyExitPopular = -1;
 searchResult beamSearch(const vector<gameState> cur, int depth, bool first=false) {
   if (!first) {
     for (auto g: cur) {
@@ -193,7 +215,7 @@ searchResult beamSearch(const vector<gameState> cur, int depth, bool first=false
       }
     }
   }
-  if (depth == 0) {
+  if (depth == 0 || (depth <= earlyExitPopular && getMostPopular(cur).second > 0.3)) {
     searchResult s;
     s.gameStates = cur;
     s.failed = true;
@@ -215,7 +237,7 @@ searchResult beamSearch(const vector<gameState> cur, int depth, bool first=false
 
   vector<gameState> filtered;
   for(int i = 0; i < beamSearchLimit; ++i) {
-    if (i < sz(scores)) {
+    if (i < sz(scores) && (scores[i].first <= 0 || i < 100)) {
       int idx = scores[i].second;
       filtered.push_back(nxt[idx]);
     }
@@ -237,32 +259,15 @@ bool eq(vector<int> q1, vector<int> q2) {
   return false;
 }
 
-piece getMostPopular(vector<gameState> &gameStates) {
-  piece m;
-  umap<piece, double> counts;
-  double total = 0;
-  double f = 1;
-  for (auto &g: gameStates) {
-    if (!sz(g.trace)) continue;
-    piece p = g.trace[0];
-    counts[p] += f;
-    total += f;
-    f *= 0.9;
-    if (counts[p] > counts[m]) {
-      m = p;
-    }
-  }
-  if (total) {
-    printf("mostPopular: %lf, %lf\n",  counts[m], counts[m] / (total));
-  }
-  return m;
-}
-
 board lastB;
 vector<int> lastP;
 vector<piece> lastT;
 
+ll wins = 0;
+ll totalQueries = 0;
+ll hardQueries = 0;
 engineResult getBestMove(board b, vector<int> pieces) {
+  ++totalQueries;
   if (b.grid == lastB.grid && sz(lastP) && sz(pieces) && eq(pieces, lastP) && sz(lastT)) {
     printf("short circuiting\n");
     piece p = lastT[0];
@@ -275,6 +280,7 @@ engineResult getBestMove(board b, vector<int> pieces) {
     }
     return {p, 1};
   }
+  ++hardQueries;
   // beam search
   for(int i = 0; i < 4; ++i) {
     checkpoints[i] = 0;
@@ -282,10 +288,23 @@ engineResult getBestMove(board b, vector<int> pieces) {
 
   vector<gameState> inp(1);
   inp[0] = {b, pieces};
+  int tmpBeamSearchLimit = beamSearchLimit;
+  /* global cache hit rate 0.416820
+  hardQueries: 65, cacheMisses: 105538
+  wins: 12, totalQueries: 111; ratio: 0.108108 */
+  beamSearchLimit = 150; // ratio of cacheMisses:hardQueries = 2000 with this optimization
+  // ratio = 1576 with additional early exit
+  // ratio of cacheMisses:hardQueries = 3200 without
+  earlyExitPopular = -1;
+
   searchResult res = beamSearch(inp, sz(pieces), true);
+  beamSearchLimit = tmpBeamSearchLimit;
   printf("global cache hit rate %lf\n", 1. * cacheHits / (cacheHits + cacheMisses));
+  printf("hardQueries: %lld, cacheMisses: %lld\n", hardQueries, cacheMisses);
+  printf("wins: %lld, totalQueries: %lld; ratio: %lf\n", wins, totalQueries, 1. * wins / totalQueries);
   if (!res.failed) {
     printf("IT IS POSSIBLE\n");
+    ++wins;
     gameState g = res.gameStates[0];
     lastB = b;
     lastP = pieces;
@@ -301,15 +320,17 @@ engineResult getBestMove(board b, vector<int> pieces) {
     return {p, 1};
   } else {
     printf("BAD\n");
-    piece p = getMostPopular(res.gameStates);
+    earlyExitPopular = 2;
+    res = beamSearch(inp, min(5, sz(pieces)), true);
+    piece p = getMostPopular(res.gameStates).first;
     if (!p.isNull()) {
       return {p, 0};
     } else {
       printf("piece %d is null :(\n", p.pieceType);
+      vector<piece> v = getMoves(b, pieces[0]);
+      printf("Found %lu moves\n", v.size());
+      piece bestMove = v.back();
+      return {bestMove, -1};
     }
   }
-  vector<piece> v = getMoves(b, pieces[0]);
-  printf("Found %lu moves\n", v.size());
-  piece bestMove = v.back();
-  return {bestMove, -1};
 }

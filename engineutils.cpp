@@ -22,16 +22,18 @@ const int MAX_MEMO_SIZE = 100000;
 ll cacheHits = 0;
 ll cacheMisses = 0;
 int bfsCount = 0;
-unordered_map<pair<lll, int>, vector<piece>> memo1, memo2;
+unordered_map<pair<lll, int>, pair<umap<piece, pair<piece, int> > , vector<piece>>> memo1, memo2;
 vector<piece> bfs(board &b, piece initial) {
   pair<lll, int> key(b.grid, initial.pieceType);
   if (memo1.count(key)) {
     ++cacheHits;
-    return memo1[key];
+    trace = memo1[key].first;
+    return memo1[key].second;
   }
   if (memo2.count(key)) {
     ++cacheHits;
-    return memo2[key];
+    trace = memo2[key].first;
+    return memo2[key].second;
   }
   ++cacheMisses;
   ++bfsCount;
@@ -61,7 +63,7 @@ vector<piece> bfs(board &b, piece initial) {
     memo1 = memo2;
     memo2.clear();
   }
-  memo2[key] = ret;
+  memo2[key] = make_pair(trace, ret);
   return ret;
 }
 
@@ -75,7 +77,7 @@ vector<int> getPath(board b, piece p, piece inHand) { // returns info on most re
   vector<int> ans;
   piece initial = piece(p.pieceType);
   bfs(b, initial);
-  if (!vis[p]) {
+  if (!trace.count(p)) {
     printf("ILLEGAL MOVE!\n");
     return ans;
   }

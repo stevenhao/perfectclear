@@ -184,7 +184,7 @@ class Stream:
             self.buffering = False
             return
         if len(self.snapshots) >= MAX_SNAPSHOT_BUFFER / 2 and not self.buffering:
-            print('Waiting...', len(self.snapshots))
+            # print('Waiting...', len(self.snapshots))
             return
         print('Buffering...', len(self.snapshots))
         self.buffering = True

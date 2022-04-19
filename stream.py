@@ -234,8 +234,8 @@ def main():
     width = 640
     height = 480
 
-    video_fps = 16
-    fps = 4
+    video_fps = 15
+    fps = 3
     stream = Stream(width, height, video_fps, fps)
     # for i in range(10000):
     #     stream.prebuffer()

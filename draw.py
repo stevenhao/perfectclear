@@ -45,7 +45,6 @@ def draw_game(
     w = game_width * c1 + 10 * c2 + 4 * c3 + 2 * c5
     h = game_height * c1 + 2 * c3 + 2 * c5
     size = round(min(img_width / w, img_height / h))
-    print('drawing size', size)
     c1 *= size
     c2 *= size
     c3 *= size
@@ -100,7 +99,6 @@ def draw_game(
         (bx1, by1), (bx2, by2) = box
         tx = bx1 + ((bx2 - bx1) - pw * c2) / 2
         ty = by1 + ((by2 - by1) - ph * c2) / 2
-        print(tx, ty, pw, ph)
         for y, x in piece.blocks:
             rect(((tx + x * c2, ty + y * c2), (tx + (x + 1) * c2, ty + (y + 1) * c2)), color)
         

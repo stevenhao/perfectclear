@@ -196,8 +196,8 @@ def main():
     width = 640
     height = 480
 
-    video_fps = 15
-    fps = 5
+    video_fps = 16
+    fps = 4
     stream = Stream(width, height, video_fps, fps)
     with TwitchBufferedOutputStream(
             twitch_stream_key=args.streamkey,
@@ -208,8 +208,8 @@ def main():
             verbose=True) as videostream:
         while True:
             buffer_state = videostream.get_video_frame_buffer_state()
-            if buffer_state < 1500:
-                search_breadth = 100 if buffer_state < 100 else 400 if buffer_state < 500 else 500 if buffer_state < 1000 else 600
+            if buffer_state < 1000:
+                search_breadth = 100 if buffer_state < 100 else 400 if buffer_state < 500 else 500 if buffer_state < 700 else 600
                 videostream.send_video_frame(stream.get_frame(search_breadth))
                 print('Buffered frames:', videostream.get_video_frame_buffer_state(), 'Search breadth', search_breadth)
             else:

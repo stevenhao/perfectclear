@@ -153,8 +153,9 @@ class Stream:
 
     def get_snapshot(self, search_breadth=500):
         if not self.path:
-            self.get_path(search_breadth)
-        if self.path_idx == len(self.path):
+            result = self.game.snapshot(None)
+            self.get_path(search_breadth) # for next round
+        elif self.path_idx == len(self.path):
             self.game.add_piece(self.path[-1])
             result = self.game.snapshot(None)
             self.path = None
@@ -178,7 +179,7 @@ class Stream:
         return self.last_frame
     
     def prebuffer(self):
-        MAX_SNAPSHOT_BUFFER = 3000
+        MAX_SNAPSHOT_BUFFER = 2000
         if len(self.snapshots) >= MAX_SNAPSHOT_BUFFER:
             self.buffering = False
             return

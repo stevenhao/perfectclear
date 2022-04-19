@@ -18,7 +18,7 @@ void psh(piece cur, piece prv, int move) {
   ++qr;
 }
 
-const int MAX_MEMO_SIZE = 100000;
+const int MAX_MEMO_SIZE = 30000;
 ll cacheHits = 0;
 ll cacheMisses = 0;
 int bfsCount = 0;

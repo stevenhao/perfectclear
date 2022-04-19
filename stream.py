@@ -191,6 +191,29 @@ class Stream:
         search_breadth = 50 if len(self.snapshots) < 100 else 200
         self.snapshots.append(self.get_snapshot(search_breadth))
 
+#         ..........                                                                                                                     │    464 root       20   0  235M  4220  3080 S  0.0  0.1  0:00.68 /usr/lib/accountsservice/accounts-daemon
+# ....++++..                                                                                                                     │    844 root       20   0 1278M  9312  2824 S  0.0  0.2  0:00.10 /snap/amazon-ssm-agent/5163/amazon-ssm-agent
+# {"board":{"H":"10","W":"10","data":"0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000│    298 root       RT   0  273M 18000  8208 S  0.0  0.4  0:00.08 /sbin/multipathd -d -s
+# 000111100"},"pieces":["Z","T","O","L","J","Z","S","T"],"reqid":3137,"search_breadth":500}                                      │    482 root       20   0  852M 25136  8040 S  0.0  0.6  0:14.74 /usr/lib/snapd/snapd
+# Beam search limit is now 500                                                                                                   │   5145 root       20   0 1278M  9312  2824 S  0.0  0.2  0:00.17 /snap/amazon-ssm-agent/5163/amazon-ssm-agent
+# global cache hit rate 0.433259                                                                                                 │    842 root       20   0 1290M 16412  6064 S  0.0  0.4  0:06.24 /snap/amazon-ssm-agent/5163/ssm-agent-worker
+# hardQueries: 1872, cacheMisses: 3242827                                                                                        │    458 root       20   0  235M  4220  3080 S  0.0  0.1  0:00.73 /usr/lib/accountsservice/accounts-daemon
+# wins: 316, totalQueries: 3137; ratio: 0.100733                                                                                 │    648 postgres   20   0  212M 17100 15068 S  0.0  0.4  0:00.22 /usr/lib/postgresql/12/bin/postgres -D /var/lib/postgresql/12
+# BAD                                                       
+# 
+# Beam search limit is now 200                                                                                                   │    298 root       RT   0  273M 18000  8208 S  0.0  0.4  0:00.08 /sbin/multipathd -d -s
+# global cache hit rate 0.140264                                                                                                 │    482 root       20   0  852M 25136  8040 S  0.0  0.6  0:14.74 /usr/lib/snapd/snapd
+# hardQueries: 31, cacheMisses: 48018                                                                                            │   5145 root       20   0 1278M  9312  2824 S  0.0  0.2  0:00.17 /snap/amazon-ssm-agent/5163/amazon-ssm-agent
+# wins: 5, totalQueries: 51; ratio: 0.098039                                                                                     │    842 root       20   0 1290M 16412  6064 S  0.0  0.4  0:06.24 /snap/amazon-ssm-agent/5163/ssm-agent-worker
+# Win indexes:0 10 47 110 169                                                                                                    │    458 root       20   0  235M  4220  3080 S  0.0  0.1  0:00.73 /usr/lib/accountsservice/accounts-daemon
+# BAD                                                                                                                            │    648 postgres   20   0  212M 17100 15068 S  0.0  0.4  0:00.22 /usr/lib/postgresql/12/bin/postgres -D /var/lib/postgresql/12
+# mostPopular: 3.695614, 0.369561                                                                                                │    836 root       20   0  852M 25136  8040 S  0.0  0.6  0:04.58 /usr/lib/snapd/snapd
+# Board with piece:                                                                     │    836 root       20   0  852M 25136  8040 S  0.0  0.6  0:04.58 /usr/lib/snapd/snapd
+# mostPopular: 3.367799, 0.336780                                                                                                │    361 systemd-t  20   0 89972  4408  3632 S  0.0  0.1  0:00.08 /lib/systemd/systemd-timesyncd
+# mostPopular: 3.367799, 0.336780                                                                                                │    775 root       20   0  852M 25136  8040 S  0.0  0.6  0:00.16 /usr/lib/snapd/snapd
+# Board with piece:                                                                                                              │    671 postgres   20   0  212M  3696  1632 S  0.0  0.1  0:00.35 postgres: 12/main: background writer
+# ..........
+
 # 100: wins: 8, totalQueries: 81; ratio: 0.098765
 # 100: wins: 25, totalQueries: 266; ratio: 0.093985
 # 300: wins: 26, totalQueries: 269; ratio: 0.096654
@@ -214,9 +237,9 @@ def main():
     video_fps = 16
     fps = 4
     stream = Stream(width, height, video_fps, fps)
-    for i in range(10000):
-        stream.prebuffer()
-    return
+    # for i in range(10000):
+    #     stream.prebuffer()
+    # return
 
     with TwitchBufferedOutputStream(
             twitch_stream_key=args.streamkey,

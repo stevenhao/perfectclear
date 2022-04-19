@@ -151,7 +151,7 @@ class Stream:
         self.path_idx = 0
         # print(self.path)
 
-    def get_snapshot(self, search_breadth=500):
+    def get_snapshot(self, search_breadth=300):
         if not self.path:
             result = self.game.snapshot(None)
             self.get_path(search_breadth) # for next round
@@ -188,8 +188,15 @@ class Stream:
             return
         print('Buffering...', len(self.snapshots))
         self.buffering = True
-        search_breadth = 100 if len(self.snapshots) < 100 else 500
+        search_breadth = 50 if len(self.snapshots) < 100 else 200
         self.snapshots.append(self.get_snapshot(search_breadth))
+
+# 100: wins: 8, totalQueries: 81; ratio: 0.098765
+# 100: wins: 25, totalQueries: 266; ratio: 0.093985
+# 300: wins: 26, totalQueries: 269; ratio: 0.096654
+# 500: wins: 17, totalQueries: 269; ratio: 0.063197
+# 500: wins: 27, totalQueries: 269; ratio: 0.100372 1:27.22 total
+# 200: wins: 20, totalQueries: 263; ratio: 0.076046 1:01.87 tota
 
 
 def main():
@@ -207,6 +214,10 @@ def main():
     video_fps = 16
     fps = 4
     stream = Stream(width, height, video_fps, fps)
+    for i in range(10000):
+        stream.prebuffer()
+    return
+
     with TwitchBufferedOutputStream(
             twitch_stream_key=args.streamkey,
             width=width,

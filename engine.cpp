@@ -10,6 +10,7 @@ struct gameState {
   board b;
   vector<int> queue;
   vector<piece> trace;
+  int index;
   bool isCleared() {
     return b.grid == 0;
   }
@@ -160,7 +161,7 @@ int getScore(gameState gameState) {
   int needed = countNeeded(gameState);
 
   // return a heuristic?
-  return 1000000 - 1000 * needed - 40 * holes - 10 * rowDependencies + (rand() % 100);
+  return 1000000 - 30 * needed - 40 * holes - 10 * rowDependencies + (rand() % 100);
 }
 
 vector<gameState> getNextGameStates(const gameState &g) {
@@ -178,7 +179,7 @@ vector<gameState> getNextGameStates(const gameState &g) {
       nq.erase(nq.begin() + i);
       vector<piece> tr = trace;
       tr.push_back(move);
-      result.push_back({ nb, nq, tr });
+      result.push_back({ nb, nq, tr, g.index });
     }
   }
   return result;
@@ -239,10 +240,20 @@ searchResult beamSearch(const vector<gameState> cur, int depth, bool first=false
     return s;
   }
   vector<gameState> nxt;
+  unordered_set<pair<lll, int>> seen;
   for (auto g: cur) {
     vector<gameState> lst = getNextGameStates(g);
     nxt.insert(nxt.end(), lst.begin(), lst.end());
   }
+  vector<gameState> nnxt = nxt;
+  nxt.clear();
+  for (gameState &g: nnxt) {
+    pair<lll, int> p(g.b.grid, g.queue.size() ? g.queue[0] : -1);
+    if (seen.count(p)) continue;
+    seen.insert(p);
+    nxt.push_back(g);
+  }
+  seen.clear();
   for(int i = 0; i < 4; ++i) {
     checkpoints[i] = 0;
   }
@@ -255,6 +266,7 @@ searchResult beamSearch(const vector<gameState> cur, int depth, bool first=false
   for(int i = 0; i < beamSearchLimit; ++i) {
     if (i < sz(scores) && (scores[i].first <= 0 || i < 100)) {
       int idx = scores[i].second;
+      nxt[idx].index = max(nxt[idx].index, i);
       filtered.push_back(nxt[idx]);
     }
   }
@@ -282,6 +294,7 @@ vector<piece> lastT;
 ll wins = 0;
 ll totalQueries = 0;
 ll hardQueries = 0;
+vector<int> winIndexes;
 engineResult getBestMove(board b, vector<int> pieces) {
   ++totalQueries;
   if (b.grid == lastB.grid && sz(lastP) && sz(pieces) && eq(pieces, lastP) && sz(lastT)) {
@@ -304,22 +317,43 @@ engineResult getBestMove(board b, vector<int> pieces) {
 
   vector<gameState> inp(1);
   inp[0] = {b, pieces};
-  int tmpBeamSearchLimit = beamSearchLimit;
+  // int tmpBeamSearchLimit = beamSearchLimit;
   /* global cache hit rate 0.416820
   hardQueries: 65, cacheMisses: 105538
   wins: 12, totalQueries: 111; ratio: 0.108108 */
-  beamSearchLimit = 150; // ratio of cacheMisses:hardQueries = 2000 with this optimization
+  /*
+  300
+  IT IS CLEARED!global cache hit rate 0.137010
+hardQueries: 136, cacheMisses: 347652
+wins: 34, totalQueries: 263; ratio: 0.129278
+Win indexes:0 0 0 0 0 0 0 0 0 0 0 0 20 58 76 83 133 150 160 164 211 247 252 252 268 269 282 282 284 285 291 292 296 296
+IT IS POSSIBLE, index = 203
+Board with piece:
+..........
+..........
+  */
+
+  // beamSearchLimit = 400; // ratio of cacheMisses:hardQueries = 2000 with this optimization
   // ratio = 1576 with additional early exit
   // ratio of cacheMisses:hardQueries = 3200 without
-  earlyExitPopular = -1;
+  // earlyExitPopular = -1;
 
   searchResult res = beamSearch(inp, sz(pieces), true);
-  beamSearchLimit = tmpBeamSearchLimit;
+  // beamSearchLimit = tmpBeamSearchLimit;
   printf("global cache hit rate %lf\n", 1. * cacheHits / (cacheHits + cacheMisses));
   printf("hardQueries: %lld, cacheMisses: %lld\n", hardQueries, cacheMisses);
   printf("wins: %lld, totalQueries: %lld; ratio: %lf\n", wins, totalQueries, 1. * wins / totalQueries);
+  printf("Win indexes:");
+  for (int i: winIndexes) {
+    printf("%d ", i);
+  }
+  printf("\n");
   if (!res.failed) {
-    printf("IT IS POSSIBLE\n");
+    printf("IT IS POSSIBLE, index = %d\n", res.gameStates[0].index);
+    if (winIndexes.size() < 500) {
+      winIndexes.push_back(res.gameStates[0].index);
+    }
+    sort(winIndexes.begin(), winIndexes.end());
     ++wins;
     gameState g = res.gameStates[0];
     lastB = b;
@@ -336,8 +370,8 @@ engineResult getBestMove(board b, vector<int> pieces) {
     return {p, 1};
   } else {
     printf("BAD\n");
-    earlyExitPopular = 2;
-    res = beamSearch(inp, min(5, sz(pieces)), true);
+    // earlyExitPopular = 2;
+    // res = beamSearch(inp, min(5, sz(pieces)), true);
     piece p = getMostPopular(res.gameStates).first;
     if (!p.isNull()) {
       return {p, 0};

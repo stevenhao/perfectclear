@@ -27,6 +27,7 @@ vector<piece> bfs(board &b, piece initial) {
   pair<lll, int> key(b.grid, initial.pieceType);
   if (memo1.count(key)) {
     ++cacheHits;
+    memo2[key] = memo1[key];
     trace = memo1[key].first;
     return memo1[key].second;
   }

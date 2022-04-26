@@ -1,26 +1,27 @@
-all: server enginetest
+all: server enginetest book vis
 
 OS_NAME=$(shell uname -s)
+CXX=g++-9
 ifeq (${OS_NAME},Darwin)
 	RTLIB=
-	CXXFLAGS = -framework CoreFoundation -framework CoreServices -std=gnu++0x -stdlib=libc++ -g -O0 -O2 -I$(LIBUV_PATH)/include -I$(HTTP_PARSER_PATH) -I. -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64
+  CXXFLAGS = -DSTEVEN -std=c++17 -framework CoreFoundation -framework CoreServices -g -O0 -O2 -I$(LIBUV_PATH)/include -I$(HTTP_PARSER_PATH) -I. -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64
 
 else
 	RTLIB=-lrt
-	CXXFLAGS = -std=gnu++0x -g -O0 -I$(LIBUV_PATH)/include -I$(HTTP_PARSER_PATH) -I. -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64
+  CXXFLAGS = -DSTEVEN -std=c++17 -g -O0 -O2 -I$(LIBUV_PATH)/include -I$(HTTP_PARSER_PATH) -I. -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64
 endif
 
 server: server.cpp
 	$(CXX) $(CXXFLAGS) -o server.o server.cpp
 
 enginetest: enginetest.cpp
-	g++-9 -DSTEVEN -std=c++17 -framework CoreFoundation -framework CoreServices -g -O0 -O2 -I$(LIBUV_PATH)/include -I$(HTTP_PARSER_PATH) -I. -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64 -o enginetest.o enginetest.cpp
+	$(CXX) $(CXXFLAGS) -o enginetest.o enginetest.cpp
 
 book: book.cpp
-	g++-9 -DSTEVEN -std=c++17 -framework CoreFoundation -framework CoreServices -g -O0 -O2 -I$(LIBUV_PATH)/include -I$(HTTP_PARSER_PATH) -I. -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64 -o book.o book.cpp
+	$(CXX) -DSTEVEN -std=c++17 -framework CoreFoundation -framework CoreServices -g -O0 -O2 -I$(LIBUV_PATH)/include -I$(HTTP_PARSER_PATH) -I. -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64 -o book.o book.cpp
 
 vis: vis.cpp
-	g++-9 -DSTEVEN -std=c++17 -framework CoreFoundation -framework CoreServices -g -O0 -O2 -I$(LIBUV_PATH)/include -I$(HTTP_PARSER_PATH) -I. -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64 -o vis.o vis.cpp
+	$(CXX) -DSTEVEN -std=c++17 -framework CoreFoundation -framework CoreServices -g -O0 -O2 -I$(LIBUV_PATH)/include -I$(HTTP_PARSER_PATH) -I. -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64 -o vis.o vis.cpp
 
 tetristest: tetristest.cpp
 	$(CXX) $(CXXFLAGS) -o tetristest.o tetristest.cpp

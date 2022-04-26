@@ -20,4 +20,7 @@ Let's get a perfect clear!
 - perf record -g ./enginetest.o 10
 - perf report
 
+## Book
+`make book && ./book.o | tee book_100k.txt # or any other file name; edit book.cpp to control the size`
+
 Have fun!

@@ -1,13 +1,14 @@
-#include "tetrisio.cpp"
 #include <unordered_map>
 #include <unordered_set>
+
+#include "tetrisio.cpp"
 
 using namespace std;
 
 #define umap unordered_map
 umap<piece, int> vis;
-umap<piece, pair<piece, int> > trace;
-piece queue[MAXN*MAXN*5];
+umap<piece, pair<piece, int>> trace;
+piece queue[MAXN * MAXN * 5];
 umap<lll, bool> seen;
 int ql, qr;
 void psh(piece cur, piece prv, int move) {
@@ -22,7 +23,9 @@ const int MAX_MEMO_SIZE = 30000;
 ll cacheHits = 0;
 ll cacheMisses = 0;
 int bfsCount = 0;
-unordered_map<pair<lll, int>, pair<umap<piece, pair<piece, int> > , vector<piece>>> memo1, memo2;
+unordered_map<pair<lll, int>,
+              pair<umap<piece, pair<piece, int>>, vector<piece>>>
+    memo1, memo2;
 vector<piece> bfs(board &b, piece initial) {
   pair<lll, int> key(b.grid, initial.pieceType);
   if (memo1.count(key)) {
@@ -46,7 +49,8 @@ vector<piece> bfs(board &b, piece initial) {
 
   vector<piece> ret;
   while (ql < qr) {
-    piece cur = queue[ql]; ++ql;
+    piece cur = queue[ql];
+    ++ql;
     if (rest(cur, b)) {
       board nb;
       nb.add(cur);
@@ -54,13 +58,12 @@ vector<piece> bfs(board &b, piece initial) {
       seen[nb.grid] = true;
       ret.push_back(cur);
     }
-    for(int move = 0; move < MOVES; ++move) {
+    for (int move = 0; move < MOVES; ++move) {
       piece nxt = apply(move, cur, b);
       psh(nxt, cur, move);
     }
   }
   if (memo2.size() >= MAX_MEMO_SIZE) {
-    printf("CLEARING THE MEMO!!\n");
     memo1 = memo2;
     memo2.clear();
   }
@@ -74,7 +77,8 @@ vector<piece> getMoves(board b, int pType) {
   return ret;
 }
 
-vector<int> getPath(board b, piece p, piece inHand) { // returns info on most recent getMoves
+vector<int> getPath(board b, piece p,
+                    piece inHand) {  // returns info on most recent getMoves
   vector<int> ans;
   piece initial = piece(p.pieceType);
   bfs(b, initial);
@@ -95,4 +99,3 @@ vector<int> getPath(board b, piece p, piece inHand) { // returns info on most re
   reverse(ans.begin(), ans.end());
   return ans;
 }
-

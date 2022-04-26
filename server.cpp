@@ -1,22 +1,20 @@
 /* A simple server in the internet domain using TCP
    The port number is passed as an argument */
+#include <netinet/in.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <unistd.h>
-#include <sys/types.h> 
 #include <sys/socket.h>
-#include <netinet/in.h>
+#include <sys/types.h>
+#include <unistd.h>
 
-#include "json.hpp"
 #include "engine.cpp"
+#include "json.hpp"
 
 using json = nlohmann::json;
 using namespace std;
 
-
-void error(const char *msg)
-{
+void error(const char *msg) {
   perror(msg);
   exit(1);
 }
@@ -38,8 +36,8 @@ board readBoard(json j) {
     char buf[MAXN][MAXN];
 
     int cnt = 0;
-    for(int i = 0; i < H; ++i) {
-      for(int j = 0; j < W; ++j) {
+    for (int i = 0; i < H; ++i) {
+      for (int j = 0; j < W; ++j) {
         buf[i][j] = s[cnt];
         ++cnt;
       }
@@ -54,7 +52,7 @@ vector<int> readPieces(json j) {
   vector<string> v = j.get<vector<string>>();
   vector<int> ret;
   stringstream ss;
-  for (auto &s: v) {
+  for (auto &s : v) {
     ret.push_back(getPieceIndex(s));
   }
   return ret;
@@ -65,7 +63,8 @@ string handleRequest(string input) {
   try {
     auto j = json::parse(input);
     cerr << j << "\n";
-    if (j.is_object() && j["board"].is_object() && j["pieces"].is_array() && j["reqid"].is_number()) {
+    if (j.is_object() && j["board"].is_object() && j["pieces"].is_array() &&
+        j["reqid"].is_number()) {
       int reqid = j["reqid"].get<int>();
       int search_breadth = j["search_breadth"].get<int>();
       if (search_breadth) {
@@ -80,10 +79,14 @@ string handleRequest(string input) {
       vector<int> path = getPath(b, result.move, initial);
       piece p = result.move;
       disp(b, p);
+      board nb = b;
+      nb.add(p);
+      printf("SCORE: %d; BOOK SCORE: %lf\n", getScore({nb, {}, {}, 0}),
+             getBookScore(nb));
       vector<string> pathStrings;
       p = piece(p.pieceType);
       pathStrings.push_back(toString(p));
-      for(auto i: path) {
+      for (auto i : path) {
         p = apply(i, p, b);
         pathStrings.push_back(toString(p));
       }
@@ -106,9 +109,9 @@ string handleRequest(string input) {
   return "ok";
 }
 
-int main(int argc, char *argv[])
-{
+int main(int argc, char *argv[]) {
   loadData();
+  loadBook();
   /*  stringstream ss;
       ss << cin.rdbuf();
       string ans = handleRequest(ss.str());
@@ -120,45 +123,46 @@ int main(int argc, char *argv[])
   struct sockaddr_in serv_addr, cli_addr;
   int n;
   if (argc < 2) {
-    fprintf(stderr,"ERROR, no port provided\n");
+    fprintf(stderr, "ERROR, no port provided\n");
     exit(1);
   }
   sockfd = socket(AF_INET, SOCK_STREAM, 0);
-  if (sockfd < 0) 
-    error("ERROR opening socket");
-  bzero((char *) &serv_addr, sizeof(serv_addr));
+  if (sockfd < 0) error("ERROR opening socket");
+  bzero((char *)&serv_addr, sizeof(serv_addr));
   portno = atoi(argv[1]);
   if (argc >= 3) {
-    setBeamSearchLimit(atoi(argv[2]));
+    loadBook();
   }
   serv_addr.sin_family = AF_INET;
   serv_addr.sin_addr.s_addr = INADDR_ANY;
   serv_addr.sin_port = htons(portno);
-  if (::bind(sockfd, (struct sockaddr *) &serv_addr,
-        sizeof(serv_addr)) < 0) 
+  if (::bind(sockfd, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0)
     error("ERROR on binding");
-  listen(sockfd,5);
+  listen(sockfd, 5);
   clilen = sizeof(cli_addr);
   while (true) {
-    newsockfd = accept(sockfd, 
-        (struct sockaddr *) &cli_addr, 
-        &clilen);
-    if (newsockfd < 0) 
-      error("ERROR on accept");
+    newsockfd = accept(sockfd, (struct sockaddr *)&cli_addr, &clilen);
+    if (newsockfd < 0) error("ERROR on accept");
     while (true) {
-      bzero(buffer,256);
-      n = read(newsockfd,buffer,255);
-      if (n < 0) { cerr << "ERROR reading from socket\n"; break; }
+      bzero(buffer, 256);
+      n = read(newsockfd, buffer, 255);
+      if (n < 0) {
+        cerr << "ERROR reading from socket\n";
+        break;
+      }
       string res = handleRequest(string(buffer));
       if (res.size()) {
         n = write(newsockfd, res.c_str(), res.size());
       } else {
         break;
       }
-      if (n < 0) { cerr << "ERROR writing to socket\n"; break; }
+      if (n < 0) {
+        cerr << "ERROR writing to socket\n";
+        break;
+      }
     }
     close(newsockfd);
   }
   close(sockfd);
-  return 0; 
+  return 0;
 }

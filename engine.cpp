@@ -1,6 +1,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <iostream>
+
 #include "engineutils.cpp"
 
 #define sz(x) (int((x).size()))
@@ -11,9 +12,7 @@ struct gameState {
   vector<int> queue;
   vector<piece> trace;
   int index;
-  bool isCleared() {
-    return b.grid == 0;
-  }
+  bool isCleared() { return b.grid == 0; }
 };
 
 struct searchResult {
@@ -21,31 +20,29 @@ struct searchResult {
   bool failed;
 };
 
-int getHeight(gameState &gameState) {
+int getHeight(board &b) {
   for (int i = H - 1; i >= 0; --i) {
-    if ((gameState.b.grid & rowmsk(i)) != 0) {
+    if ((b.grid & rowmsk(i)) != 0) {
       return i;
     }
   }
   return -1;
-
 }
 
-bool badHeight(gameState &gameState) {
+bool badHeight(board &b) {
   for (int i = 4; i < H; ++i) {
-    if ((gameState.b.grid & rowmsk(i)) != 0) {
+    if ((b.grid & rowmsk(i)) != 0) {
       return true;
     }
   }
   return false;
 }
 
-bool badMod4(gameState &gameState) {
-  board &b = gameState.b;
+bool badMod4(board &b) {
   int cur = 0;
-  for(int i = 0; i < W; ++i) {
+  for (int i = 0; i < W; ++i) {
     int cnt = 0;
-    for(int j = 0; j < 4; ++j) {
+    for (int j = 0; j < 4; ++j) {
       if (b.get(i, j)) {
         ++cnt;
       } else {
@@ -60,12 +57,11 @@ bool badMod4(gameState &gameState) {
   return false;
 }
 
-bool badHoles(gameState &gameState) {
-  board &b = gameState.b;
-  for(int i = 0; i < W; ++i) {
+bool badHoles(board &b) {
+  for (int i = 0; i < W; ++i) {
     int cnt = 0;
     int cur;
-    for(int j = 0; j < 4; ++j) {
+    for (int j = 0; j < 4; ++j) {
       if (b.get(i, j)) {
         ++cnt;
       } else {
@@ -73,8 +69,7 @@ bool badHoles(gameState &gameState) {
       }
     }
     if (cnt == 3) {
-      if ((i + 1 == W || b.get(i + 1, cur)) &&
-          (i == 0 || b.get(i - 1, cur))) {
+      if ((i + 1 == W || b.get(i + 1, cur)) && (i == 0 || b.get(i - 1, cur))) {
         return true;
       }
     }
@@ -83,14 +78,12 @@ bool badHoles(gameState &gameState) {
   return false;
 }
 
-int countHoles(gameState &gameState) {
-  board &b = gameState.b;
+int countHoles(board &b) {
   int holes = 0;
-  for(int i = 0; i < W; ++i) {
-    for(int j = 0; j < 4; ++j) {
+  for (int i = 0; i < W; ++i) {
+    for (int j = 0; j < 4; ++j) {
       if (!b.get(i, j) && b.get(i, j + 1)) {
-        if ((i + 1 == W || b.get(i + 1, j)) &&
-            (i == 0 || b.get(i - 1, j))) {
+        if ((i + 1 == W || b.get(i + 1, j)) && (i == 0 || b.get(i - 1, j))) {
           ++holes;
         }
       }
@@ -100,14 +93,12 @@ int countHoles(gameState &gameState) {
   return holes;
 }
 
-int countRowDependencies(gameState &gameState) {
-  board &b = gameState.b;
+int countRowDependencies(board &b) {
   int holes = 0;
-  for(int i = 0; i < W; ++i) {
-    for(int j = 0; j < 4; ++j) {
+  for (int i = 0; i < W; ++i) {
+    for (int j = 0; j < 4; ++j) {
       if (!b.get(i, j) && b.get(i, j + 1)) {
-        if ((i + 1 == W || b.get(i + 1, j)) &&
-            (i == 0 || b.get(i - 1, j))) {
+        if ((i + 1 == W || b.get(i + 1, j)) && (i == 0 || b.get(i - 1, j))) {
           ++holes;
         }
       }
@@ -117,18 +108,16 @@ int countRowDependencies(gameState &gameState) {
   return holes;
 }
 
-int countNeeded(gameState &gameState) {
-  board &b = gameState.b;
+int countNeeded(board &b) {
   int cnt = 0;
   int height = 0;
-  for(int i = 0; i < W; ++i) {
-    for(int j = 0; j < 4; ++j) {
+  for (int i = 0; i < W; ++i) {
+    for (int j = 0; j < 4; ++j) {
       if (b.get(i, j)) {
         cnt++;
         if (j + 1 > height) {
           height = j + 1;
         }
-
       }
     }
   }
@@ -138,30 +127,69 @@ int countNeeded(gameState &gameState) {
   return v / 4;
 }
 
+char BOOK_PATH[] = "book_100.txt";
 int checkpoints[10];
+vector<unordered_map<ll, unordered_map<int, double>>> book(7);
+void loadBook() {
+  printf("Loading book from %s...\n", BOOK_PATH);
+  ll key;
+  double score;
+  int pmsk;
+  int lines = 0;
+  int needed;
+  ifstream fin(BOOK_PATH);
+  while (fin >> needed >> key >> pmsk >> score) {
+    book[needed][key][pmsk] = score;
+    ++lines;
+  }
+  printf("Loaded %d lines and %d unique positions...\n", lines, sz(book));
+}
+
+double getBookScore(gameState &g) {
+  board &b = g.b;
+  vector<int> &queue = g.queue;
+  ll bookKey = b.toLL();
+  double ans = 0;
+  int pmsk = 1 << queue[0];
+  for (int needed = 1; needed <= sz(queue); ++needed) {
+    if (needed < sz(queue)) pmsk |= 1 << queue[needed];
+    if (book[needed].count(bookKey) == 0) {
+      continue;
+    }
+    double res = 1;
+    for (pii p : book[needed][bookKey]) {
+      if ((p.first & pmsk) != p.first) continue;
+      res *= min(0, 1 - p.second);
+    }
+    ans += 1 - res;
+  }
+  return ans;  // likelihood of winning from current position given pmsk
+}
 
 int getScore(gameState gameState) {
   checkpoints[0]++;
+  board b = gameState.b;
   // check for immediate fails
-  if (badHeight(gameState)) {
-    return -10 - getHeight(gameState);
+  if (badHeight(b)) {
+    return -10 - getHeight(b);
   }
   checkpoints[1]++;
-  if (badMod4(gameState)) {
+  if (badMod4(b)) {
     return -2;
   }
   checkpoints[2]++;
-  if (badHoles(gameState)) {
+  if (badHoles(b)) {
     return -1;
   }
   checkpoints[3]++;
 
-  int holes = countHoles(gameState);
-  int rowDependencies = countRowDependencies(gameState);
-  int needed = countNeeded(gameState);
+  int holes = countHoles(b);
+  int rowDependencies = countRowDependencies(b);
+  int needed = countNeeded(b);
 
   // return a heuristic?
-  return 1000000 - 30 * needed - 40 * holes - 10 * rowDependencies + (rand() % 100);
+  return 1 * 1000000 + getBookScore(gameState) * 500 - 30 * needed -
+         40 * holes - 10 * rowDependencies + (rand() % 100);
 }
 
 vector<gameState> getNextGameStates(const gameState &g) {
@@ -172,14 +200,14 @@ vector<gameState> getNextGameStates(const gameState &g) {
   for (int i = 0; i < 2; ++i) {
     if (i >= sz(g.queue)) continue;
     vector<piece> moves = getMoves(bb, queue[i]);
-    for (auto move: moves) {
+    for (auto move : moves) {
       board nb = bb;
       nb.add(move);
       vector<int> nq = queue;
       nq.erase(nq.begin() + i);
       vector<piece> tr = trace;
       tr.push_back(move);
-      result.push_back({ nb, nq, tr, g.index });
+      result.push_back({nb, nq, tr, g.index});
     }
   }
   return result;
@@ -192,25 +220,24 @@ void setBeamSearchLimit(int limit) {
   printf("Beam search limit is now %d\n", limit);
 }
 
-
 pair<piece, double> getMostPopular(const vector<gameState> &gameStates) {
   piece m;
   umap<piece, double> counts;
   double total = 0;
   double f = 1;
-  for (auto &g: gameStates) {
+  for (auto &g : gameStates) {
     if (!sz(g.trace)) continue;
     piece p = g.trace[0];
     counts[p] += f;
     total += f;
     f *= 0.9;
-    
+
     if (counts[p] > counts[m]) {
       m = p;
     }
   }
-  double ratio =  counts[m] / max(1., total);
-  printf("mostPopular: %lf, %lf\n",  counts[m], ratio);
+  double ratio = counts[m] / max(1., total);
+  printf("mostPopular: %lf, %lf\n", counts[m], ratio);
   return make_pair(m, ratio);
 }
 
@@ -221,9 +248,10 @@ wins: 92, totalQueries: 975; ratio: 0.094359
 */
 
 int earlyExitPopular = -1;
-searchResult beamSearch(const vector<gameState> cur, int depth, bool first=false) {
+searchResult beamSearch(const vector<gameState> cur, int depth,
+                        bool first = false) {
   if (!first) {
-    for (auto g: cur) {
+    for (auto g : cur) {
       if (g.isCleared()) {
         printf("IT IS CLEARED!");
         searchResult s;
@@ -233,7 +261,8 @@ searchResult beamSearch(const vector<gameState> cur, int depth, bool first=false
       }
     }
   }
-  if (depth == 0 || (depth <= earlyExitPopular && getMostPopular(cur).second > 0.3)) {
+  if (depth == 0 ||
+      (depth <= earlyExitPopular && getMostPopular(cur).second > 0.3)) {
     searchResult s;
     s.gameStates = cur;
     s.failed = true;
@@ -241,20 +270,20 @@ searchResult beamSearch(const vector<gameState> cur, int depth, bool first=false
   }
   vector<gameState> nxt;
   unordered_set<pair<lll, int>> seen;
-  for (auto g: cur) {
+  for (auto g : cur) {
     vector<gameState> lst = getNextGameStates(g);
     nxt.insert(nxt.end(), lst.begin(), lst.end());
   }
   vector<gameState> nnxt = nxt;
   nxt.clear();
-  for (gameState &g: nnxt) {
+  for (gameState &g : nnxt) {
     pair<lll, int> p(g.b.grid, g.queue.size() ? g.queue[0] : -1);
     if (seen.count(p)) continue;
     seen.insert(p);
     nxt.push_back(g);
   }
   seen.clear();
-  for(int i = 0; i < 4; ++i) {
+  for (int i = 0; i < 4; ++i) {
     checkpoints[i] = 0;
   }
   vector<pii> scores(sz(nxt));
@@ -263,14 +292,23 @@ searchResult beamSearch(const vector<gameState> cur, int depth, bool first=false
   }
   sort(scores.begin(), scores.end());
   vector<gameState> filtered;
-  for(int i = 0; i < beamSearchLimit; ++i) {
+  for (int i = 0; i < beamSearchLimit; ++i) {
     if (i < sz(scores) && (scores[i].first <= 0 || i < 100)) {
       int idx = scores[i].second;
       nxt[idx].index = max(nxt[idx].index, i);
       filtered.push_back(nxt[idx]);
     }
   }
-  return beamSearch(filtered, depth - 1);
+  searchResult nextRes = beamSearch(filtered, depth - 1);
+  if (!nextRes.failed) return nextRes;
+  if (getBookScore(filtered[0]) > .5) {
+    printf("USING BOOK for score %lf!\n", getBookScore(filtered[0]));
+    searchResult s;
+    s.gameStates = {filtered[0]};
+    s.failed = true;
+    return s;
+  }
+  return nextRes;
 }
 
 struct engineResult {
@@ -297,7 +335,8 @@ ll hardQueries = 0;
 vector<int> winIndexes;
 engineResult getBestMove(board b, vector<int> pieces) {
   ++totalQueries;
-  if (b.grid == lastB.grid && sz(lastP) && sz(pieces) && eq(pieces, lastP) && sz(lastT)) {
+  if (b.grid == lastB.grid && sz(lastP) && sz(pieces) && eq(pieces, lastP) &&
+      sz(lastT)) {
     printf("short circuiting\n");
     piece p = lastT[0];
     lastT.erase(lastT.begin());
@@ -307,11 +346,15 @@ engineResult getBestMove(board b, vector<int> pieces) {
     } else if (sz(lastP) > 1) {
       lastP.erase(lastP.begin() + 1);
     }
+    if (lastB.count() == 0) {
+      ++wins;
+      printf("***PERFECT CLEAR***\n");
+    }
     return {p, 1};
   }
   ++hardQueries;
   // beam search
-  for(int i = 0; i < 4; ++i) {
+  for (int i = 0; i < 4; ++i) {
     checkpoints[i] = 0;
   }
 
@@ -326,35 +369,40 @@ engineResult getBestMove(board b, vector<int> pieces) {
   IT IS CLEARED!global cache hit rate 0.137010
 hardQueries: 136, cacheMisses: 347652
 wins: 34, totalQueries: 263; ratio: 0.129278
-Win indexes:0 0 0 0 0 0 0 0 0 0 0 0 20 58 76 83 133 150 160 164 211 247 252 252 268 269 282 282 284 285 291 292 296 296
-IT IS POSSIBLE, index = 203
-Board with piece:
+Win indexes:0 0 0 0 0 0 0 0 0 0 0 0 20 58 76 83 133 150 160 164 211 247 252 252
+268 269 282 282 284 285 291 292 296 296 IT IS POSSIBLE, index = 203 Board with
+piece:
 ..........
 ..........
   */
 
-  // beamSearchLimit = 400; // ratio of cacheMisses:hardQueries = 2000 with this optimization
-  // ratio = 1576 with additional early exit
-  // ratio of cacheMisses:hardQueries = 3200 without
-  // earlyExitPopular = -1;
+  // beamSearchLimit = 400; // ratio of cacheMisses:hardQueries = 2000 with this
+  // optimization ratio = 1576 with additional early exit ratio of
+  // cacheMisses:hardQueries = 3200 without earlyExitPopular = -1;
+
+  int needed = countNeeded(b);
+  int depth = sz(pieces);
+  depth = max(6, (needed + 1) % 5 + 4);  // 6..8 incl
 
   searchResult res = beamSearch(inp, sz(pieces), true);
   // beamSearchLimit = tmpBeamSearchLimit;
-  printf("global cache hit rate %lf\n", 1. * cacheHits / (cacheHits + cacheMisses));
+  printf("global cache hit rate %lf\n",
+         1. * cacheHits / (cacheHits + cacheMisses));
   printf("hardQueries: %lld, cacheMisses: %lld\n", hardQueries, cacheMisses);
-  printf("wins: %lld, totalQueries: %lld; ratio: %lf\n", wins, totalQueries, 1. * wins / totalQueries);
+  printf("wins: %lld, totalQueries: %lld; ratio: %lf\n", wins, totalQueries,
+         1. * wins / totalQueries);
   printf("Win indexes:");
-  for (int i: winIndexes) {
+  for (int i : winIndexes) {
     printf("%d ", i);
   }
   printf("\n");
   if (!res.failed) {
-    printf("IT IS POSSIBLE, index = %d\n", res.gameStates[0].index);
+    printf("IT IS POSSIBLE, needed = %d\n index = %d\n", needed,
+           res.gameStates[0].index);
     if (winIndexes.size() < 500) {
       winIndexes.push_back(res.gameStates[0].index);
     }
     sort(winIndexes.begin(), winIndexes.end());
-    ++wins;
     gameState g = res.gameStates[0];
     lastB = b;
     lastP = pieces;
@@ -367,12 +415,20 @@ Board with piece:
       lastP.erase(lastP.begin() + 1);
     }
     lastT.erase(lastT.begin());
+    if (lastB.count() == 0) {
+      ++wins;
+      printf("***PERFECT CLEAR***\n");
+    }
     return {p, 1};
   } else {
     printf("BAD\n");
     // earlyExitPopular = 2;
     // res = beamSearch(inp, min(5, sz(pieces)), true);
     piece p = getMostPopular(res.gameStates).first;
+    printf("Best continuation... ");
+    disp(res.gameStates[0].b);
+    printf("Best score: %d, %lf\n", getScore(res.gameStates[0]),
+           getBookScore(res.gameStates[0]));
     if (!p.isNull()) {
       return {p, 0};
     } else {

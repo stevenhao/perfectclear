@@ -237,10 +237,12 @@ def main():
     video_fps = 15
     fps = 3
     stream = Stream(width, height, video_fps, fps)
-    # for i in range(10000):
-    #     stream.prebuffer()
-    # return
+    if True:
+        for _ in range(1000):
+            stream.prebuffer()
+        return
 
+    dropped_conn_cnt = 0
     with TwitchBufferedOutputStream(
             twitch_stream_key=args.streamkey,
             width=width,
@@ -252,9 +254,13 @@ def main():
             buffer_state = videostream.get_video_frame_buffer_state()
             if buffer_state < 100:
                 videostream.send_video_frame(stream.get_frame())
+                dropped_conn_cnt = 0
             else:
                 stream.prebuffer()
                 time.sleep(0.001)
+                dropped_conn_cnt += 1
+                if dropped_conn_cnt > 1000 * 10: # 10 seconds without sending a frame
+                    break
 
 if __name__ == "__main__":
     main()

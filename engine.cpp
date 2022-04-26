@@ -12,6 +12,7 @@ struct gameState {
   board b;
   vector<int> queue;
   vector<piece> trace;
+  int bag;  // what's still in the bag?
   int index;
   bool isCleared() { return b.grid == 0; }
 };
@@ -56,6 +57,7 @@ bool badMod4(board &b) {
 
   int v = height * 10 - cnt;
   if (v % 4 != 0) v += 10, height += 1;
+  if (height <= 2) height += 2;
   for (int i = 0; i < W; ++i) {
     cnt = 0;
     for (int j = 0; j < height; ++j) {
@@ -158,7 +160,7 @@ int countNeeded(board &b) {
   return v / 4;
 }
 
-char BOOK_PATH[] = "book_10000.txt";
+char BOOK_PATH[] = "book_100k.txt";
 int checkpoints[10];
 vector<unordered_map<ll, unordered_map<int, double>>> book(10);
 void loadBook() {
@@ -180,12 +182,24 @@ void loadBook() {
 double getBookScore(gameState &g, bool verbose = false) {
   board &b = g.b;
   vector<int> &queue = g.queue;
+  if (verbose) {
+    disp(b);
+    cout << "PIECES: ";
+    for (int i : queue) {
+      cout << i << " ";
+    }
+    cout << "\n";
+  }
   ll bookKey = b.toLL();
   double ans = 0;
   int pmsk = 0;
   if (sz(queue)) pmsk = 1 << queue[0];
   int freedom = 0;
   for (int needed = 1; needed < sz(book); ++needed) {
+    if (verbose) {
+      cout << needed << " " << needed << " Book key " << bookKey << " msk "
+           << pmsk << "\n";
+    }
     if (needed < sz(queue))
       pmsk |= 1 << queue[needed];
     else {
@@ -197,12 +211,8 @@ double getBookScore(gameState &g, bool verbose = false) {
     double res = 1;
     for (pii p : book[needed][bookKey]) {
       int missing = __builtin_popcount(p.first & ~pmsk);
-      if (missing > freedom) continue;
+      if (missing > freedom || (p.first & ~(pmsk | ~g.bag))) continue;
       res *= max(0., 1 - p.second * pow(0.3, missing));
-      if (verbose) {
-        cout << "Missing " << missing << " pow " << pow(0.3, missing) << " res "
-             << res << "\n";
-      }
     }
     ans += 1 - res;
   }
@@ -346,7 +356,7 @@ searchResult beamSearch(const vector<gameState> cur, int depth,
   }
   searchResult nextRes = beamSearch(filtered, depth - 1);
   if (!nextRes.failed) return nextRes;
-  if (getBookScore(filtered[0]) > .5) {
+  if (getBookScore(filtered[0]) >= 1) {
     printf("USING BOOK for score %lf!\n", getBookScore(filtered[0]));
     searchResult s;
     s.gameStates = {filtered[0]};
@@ -404,7 +414,13 @@ engineResult getBestMove(board b, vector<int> pieces) {
   }
 
   vector<gameState> inp(1);
+  int bag = 0;
+  for (int i : pieces) {
+    if ((bag >> i) & 1) bag = 0;
+    bag |= 1 << i;
+  }
   inp[0] = {b, pieces};
+  inp[0].bag = bag;
   // int tmpBeamSearchLimit = beamSearchLimit;
   /* global cache hit rate 0.416820
   hardQueries: 65, cacheMisses: 105538

@@ -66,7 +66,7 @@ string handleRequest(string input) {
     if (j.is_object() && j["board"].is_object() && j["pieces"].is_array() &&
         j["reqid"].is_number()) {
       int reqid = j["reqid"].get<int>();
-      int search_breadth = j["search_breadth"].get<int>();
+      int search_breadth = 0;  // j["search_breadth"].get<int>();
       if (search_breadth) {
         setBeamSearchLimit(search_breadth);
       } else {
@@ -75,14 +75,22 @@ string handleRequest(string input) {
       board b = readBoard(j["board"]);
       vector<int> pieces = readPieces(j["pieces"]);
       piece initial = piece(pieces[0]);
+      vector<int> nPieces = pieces;
       engineResult result = getBestMove(b, pieces);
       vector<int> path = getPath(b, result.move, initial);
       piece p = result.move;
+      if (p.pieceType == nPieces[1]) swap(nPieces[0], nPieces[1]);
+      nPieces.erase(nPieces.begin());
+
       disp(b, p);
       board nb = b;
       nb.add(p);
+      gameState nGameState;
+      nGameState.b = nb;
+      nGameState.queue = nPieces;
+
       printf("SCORE: %d; BOOK SCORE: %lf\n", getScore({nb, {}, {}, 0}),
-             getBookScore(nb));
+             getBookScore(nGameState, true));  // TODO queue
       vector<string> pathStrings;
       p = piece(p.pieceType);
       pathStrings.push_back(toString(p));

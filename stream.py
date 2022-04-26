@@ -238,7 +238,7 @@ def main():
     height = 480
 
     fps = int(args.fps)
-    video_fps = fps * 2
+    video_fps = fps
     print('FPS =', fps)
     print('VIDEO FPS =', video_fps)
     stream = Stream(width, height, video_fps, fps)

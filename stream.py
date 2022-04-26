@@ -238,9 +238,9 @@ def main():
     fps = 3
     stream = Stream(width, height, video_fps, fps)
     if True:
-        for _ in range(1000):
+        for _ in range(100):
             stream.prebuffer()
-        return
+        # return
 
     dropped_conn_cnt = 0
     with TwitchBufferedOutputStream(

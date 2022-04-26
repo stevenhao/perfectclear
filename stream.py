@@ -179,7 +179,7 @@ class Stream:
         return self.last_frame
     
     def prebuffer(self):
-        MAX_SNAPSHOT_BUFFER = 2000
+        MAX_SNAPSHOT_BUFFER = 20000
         if len(self.snapshots) >= MAX_SNAPSHOT_BUFFER:
             self.buffering = False
             return
@@ -234,11 +234,11 @@ def main():
     args = parser.parse_args()
 
 
-    width = 640
-    height = 480
+    width = 1280
+    height = 960
 
-    video_fps = 30
     fps = int(args.fps)
+    video_fps = fps + fps * max(10 // fps)
     print('FPS =', fps)
     print('VIDEO FPS =', video_fps)
     stream = Stream(width, height, video_fps, fps)
@@ -257,7 +257,7 @@ def main():
             verbose=True) as videostream:
         while True:
             buffer_state = videostream.get_video_frame_buffer_state()
-            if buffer_state < 100:
+            if buffer_state < 20 * video_fps: # always have 10s worth of content buffered
                 videostream.send_video_frame(stream.get_frame())
                 dropped_conn_cnt = 0
             else:

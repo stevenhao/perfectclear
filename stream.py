@@ -228,18 +228,23 @@ def main():
     required.add_argument('-s', '--streamkey',
             help='twitch streamkey',
             required=True)
+    required.add_argument('-f', '--fps',
+            help='moves per second',
+            default=5)
     args = parser.parse_args()
 
 
     width = 640
     height = 480
 
-    video_fps = 15
-    fps = 3
+    video_fps = 30
+    fps = int(args.fps)
+    print('FPS =', fps)
+    print('VIDEO FPS =', video_fps)
     stream = Stream(width, height, video_fps, fps)
-    if True:
-        for _ in range(100):
-            stream.prebuffer()
+    # if True:
+    #     for _ in range(100):
+    #         stream.prebuffer()
         # return
 
     dropped_conn_cnt = 0

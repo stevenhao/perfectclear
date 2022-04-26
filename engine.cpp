@@ -1,3 +1,4 @@
+#include <cmath>
 #include <cstdio>
 #include <cstdlib>
 #include <iostream>
@@ -40,16 +41,31 @@ bool badHeight(board &b) {
 
 bool badMod4(board &b) {
   int cur = 0;
+  int cnt = 0;
+  int height = 0;
   for (int i = 0; i < W; ++i) {
-    int cnt = 0;
     for (int j = 0; j < 4; ++j) {
+      if (b.get(i, j)) {
+        cnt++;
+        if (j + 1 > height) {
+          height = j + 1;
+        }
+      }
+    }
+  }
+
+  int v = height * 10 - cnt;
+  if (v % 4 != 0) v += 10, height += 1;
+  for (int i = 0; i < W; ++i) {
+    cnt = 0;
+    for (int j = 0; j < height; ++j) {
       if (b.get(i, j)) {
         ++cnt;
       } else {
         ++cur;
       }
     }
-    if (cnt == 4) {
+    if (cnt == height) {
       if (cur % 4 != 0) return true;
     }
   }
@@ -93,6 +109,21 @@ int countHoles(board &b) {
   return holes;
 }
 
+int countHoles2(board &b) {
+  int holes = 0;
+  for (int i = 0; i < W; ++i) {
+    for (int j = 0; j < 4; ++j) {
+      if (!b.get(i, j) && b.get(i, j + 1)) {
+        if ((i + 1 == W || b.get(i + 1, j)) || (i == 0 || b.get(i - 1, j))) {
+          ++holes;
+        }
+      }
+    }
+  }
+
+  return holes;
+}
+
 int countRowDependencies(board &b) {
   int holes = 0;
   for (int i = 0; i < W; ++i) {
@@ -127,42 +158,55 @@ int countNeeded(board &b) {
   return v / 4;
 }
 
-char BOOK_PATH[] = "book_100.txt";
+char BOOK_PATH[] = "book_10000.txt";
 int checkpoints[10];
-vector<unordered_map<ll, unordered_map<int, double>>> book(7);
+vector<unordered_map<ll, unordered_map<int, double>>> book(10);
 void loadBook() {
   printf("Loading book from %s...\n", BOOK_PATH);
   ll key;
   double score;
   int pmsk;
-  int lines = 0;
+  int lines = 0, positions = 0;
   int needed;
   ifstream fin(BOOK_PATH);
   while (fin >> needed >> key >> pmsk >> score) {
+    if (!book[needed].count(key)) ++positions;
     book[needed][key][pmsk] = score;
     ++lines;
   }
-  printf("Loaded %d lines and %d unique positions...\n", lines, sz(book));
+  printf("Loaded %d lines and %d unique positions...\n", lines, positions);
 }
 
-double getBookScore(gameState &g) {
+double getBookScore(gameState &g, bool verbose = false) {
   board &b = g.b;
   vector<int> &queue = g.queue;
   ll bookKey = b.toLL();
   double ans = 0;
-  int pmsk = 1 << queue[0];
-  for (int needed = 1; needed <= sz(queue); ++needed) {
-    if (needed < sz(queue)) pmsk |= 1 << queue[needed];
+  int pmsk = 0;
+  if (sz(queue)) pmsk = 1 << queue[0];
+  int freedom = 0;
+  for (int needed = 1; needed < sz(book); ++needed) {
+    if (needed < sz(queue))
+      pmsk |= 1 << queue[needed];
+    else {
+      freedom += 1;
+    }
     if (book[needed].count(bookKey) == 0) {
       continue;
     }
     double res = 1;
     for (pii p : book[needed][bookKey]) {
-      if ((p.first & pmsk) != p.first) continue;
-      res *= min(0, 1 - p.second);
+      int missing = __builtin_popcount(p.first & ~pmsk);
+      if (missing > freedom) continue;
+      res *= max(0., 1 - p.second * pow(0.3, missing));
+      if (verbose) {
+        cout << "Missing " << missing << " pow " << pow(0.3, missing) << " res "
+             << res << "\n";
+      }
     }
     ans += 1 - res;
   }
+
   return ans;  // likelihood of winning from current position given pmsk
 }
 
@@ -183,13 +227,14 @@ int getScore(gameState gameState) {
   }
   checkpoints[3]++;
 
-  int holes = countHoles(b);
-  int rowDependencies = countRowDependencies(b);
   int needed = countNeeded(b);
+  int holes = countHoles(b);
+  int holes2 = countHoles2(b);
+  int rowDependencies = countRowDependencies(b);
 
   // return a heuristic?
   return 1 * 1000000 + getBookScore(gameState) * 500 - 30 * needed -
-         40 * holes - 10 * rowDependencies + (rand() % 100);
+         40 * holes - 10 * holes2 - 10 * rowDependencies + (rand() % 10);
 }
 
 vector<gameState> getNextGameStates(const gameState &g) {
@@ -214,7 +259,7 @@ vector<gameState> getNextGameStates(const gameState &g) {
 }
 
 const int DEFAULT_SEARCH_BREADTH = 500;
-int beamSearchLimit = 500;
+int beamSearchLimit = 1000;
 void setBeamSearchLimit(int limit) {
   beamSearchLimit = limit;
   printf("Beam search limit is now %d\n", limit);

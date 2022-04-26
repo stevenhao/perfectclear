@@ -16,4 +16,8 @@ Let's get a perfect clear!
 ## Open the app
 - Open `localhost:4444`
 
+## Perf
+- perf record -g ./enginetest.o 10
+- perf report
+
 Have fun!

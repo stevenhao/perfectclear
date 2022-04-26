@@ -223,6 +223,7 @@ double getBookScore(gameState &g, bool verbose = false) {
 int getScore(gameState gameState) {
   checkpoints[0]++;
   board b = gameState.b;
+  if (b.grid == 0) return 1000000 * 10;
   // check for immediate fails
   if (badHeight(b)) {
     return -10 - getHeight(b);

@@ -22,7 +22,7 @@ def draw_game(
     img_height
 ):
     board = [[None] * 10] * 10 + orig_board
-    if all(y > 1 for y, x in cur_piece_blocks):
+    if all(y > 1 for y, x in cur_piece_blocks) and any(y > 3 for y, x in cur_piece_blocks):
         cur_piece_blocks = [(y + 10, x) for y, x in cur_piece_blocks]
     ghost_blocks = cur_piece_blocks
     while len(ghost_blocks) > 0 and all(y + 1 < len(board) and board[y + 1][x] is None for y, x in ghost_blocks):

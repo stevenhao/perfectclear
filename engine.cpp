@@ -214,7 +214,7 @@ double getBookScore(gameState &g, bool verbose = false) {
       if (missing > freedom || (p.first & ~(pmsk | ~g.bag))) continue;
       res *= max(0., 1 - p.second * pow(0.3, missing));
     }
-    ans += 1 - res;
+    ans += (1 - res) * needed > 5 ? 1 : 2;
   }
 
   return ans;  // likelihood of winning from current position given pmsk

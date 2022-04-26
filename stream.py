@@ -234,8 +234,8 @@ def main():
     args = parser.parse_args()
 
 
-    width = 640
-    height = 480
+    width = 960
+    height = 720
 
     fps = int(args.fps)
     video_fps = fps

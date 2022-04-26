@@ -234,11 +234,11 @@ def main():
     args = parser.parse_args()
 
 
-    width = 1280
-    height = 960
+    width = 640
+    height = 480
 
     fps = int(args.fps)
-    video_fps = fps + fps * max(10 // fps)
+    video_fps = fps * 2
     print('FPS =', fps)
     print('VIDEO FPS =', video_fps)
     stream = Stream(width, height, video_fps, fps)

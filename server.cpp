@@ -90,7 +90,7 @@ string handleRequest(string input) {
       nGameState.queue = nPieces;
 
       printf("SCORE: %d; BOOK SCORE: %lf\n", getScore({nb, {}, {}, 0}),
-             getBookScore(nGameState, true));  // TODO queue
+             getBookScore(nGameState, false));  // TODO queue
       vector<string> pathStrings;
       p = piece(p.pieceType);
       pathStrings.push_back(toString(p));

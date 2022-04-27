@@ -26,6 +26,9 @@ book: book.cpp
 vis: vis.cpp
 	$(CXX) $(CXXFLAGS) -o vis.o vis.cpp
 
+test: test.cpp
+	$(CXX) $(CXXFLAGS) -o test.o test.cpp
+
 tetristest: tetristest.cpp
 	$(CXX) $(CXXFLAGS) -o tetristest.o tetristest.cpp
 

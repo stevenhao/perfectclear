@@ -188,7 +188,7 @@ class Stream:
             return
         print('Buffering...', len(self.snapshots))
         self.buffering = True
-        search_breadth = 50 if len(self.snapshots) < 100 else 100
+        search_breadth = 50 if len(self.snapshots) < 100 else 200
         self.snapshots.append(self.get_snapshot(search_breadth))
 
 #         ..........                                                                                                                     │    464 root       20   0  235M  4220  3080 S  0.0  0.1  0:00.68 /usr/lib/accountsservice/accounts-daemon

@@ -19,7 +19,7 @@
      solution is to expand queue mask to 2^14 instead 2^7
   - curate shortlist of (top 3) first moves using existing beam search strategy
   - iterate over shortlist, and evaluate each using monte-carlo predictive strats & counting frequency of win
-
+  - find & fix dumb correctness bugs
 
 
 TRIAL RESULTS:
@@ -34,5 +34,7 @@ breadth / nsuccess / ntot. stdev(p) ~ .014 for n = 1000
 
 hash: (fixing the ternary operator bug)
 
-50 / 86 / 100
-100 / 
+50 / 86 / 100 (.86)
+100 / 82 / 100 (.82)
+200 / 95 / 100 (.95)
+400 / 94 / 100 (.94)

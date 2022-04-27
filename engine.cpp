@@ -2,11 +2,13 @@
 #include <cstdio>
 #include <cstdlib>
 #include <iostream>
-
+#include <chrono>
+#include <random>
 #include "engineutils.cpp"
 
 #define sz(x) (int((x).size()))
 using namespace std;
+mt19937 rng(chrono::steady_clock::now().time_since_epoch().count());
 
 struct gameState {
   board b;
@@ -241,7 +243,7 @@ int getScore(gameState gameState) {
 
   // return a heuristic?
   return 1 * 1000000 + getBookScore(gameState) * 500 - 30 * needed -
-         40 * holes - 10 * holes2 - 10 * rowDependencies + (rand() % 10);
+         40 * holes - 10 * holes2 - 10 * rowDependencies + (rng() % 10);
 }
 
 vector<gameState> getNextGameStates(const gameState &g) {

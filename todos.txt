@@ -17,3 +17,22 @@
       - include repeat-piece positions in book
       - use 7-bag awareness to run monte-carlo simulations with 11 piece queues on first move, 10 piece queues on second move 9 piece queues on third move, and picking the best move based on multiple (e.g. 10) trials
      solution is to expand queue mask to 2^14 instead 2^7
+  - curate shortlist of (top 3) first moves using existing beam search strategy
+  - iterate over shortlist, and evaluate each using monte-carlo predictive strats & counting frequency of win
+
+
+
+TRIAL RESULTS:
+
+hash: 53e771a (buggy -- getBookScore returned crazy values because of ternary bug)
+breadth / nsuccess / ntot. stdev(p) ~ .014 for n = 1000
+50 / 638 / 1000 (.638)
+100 / 733 / 1000 (.733)
+200 / 258 / 333 (.774)
+400 / 75 / 100  (.75)
+800 / 79 / 100 (.79)
+
+hash: (fixing the ternary operator bug)
+
+50 / 86 / 100
+100 / 

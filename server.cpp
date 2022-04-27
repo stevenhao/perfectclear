@@ -77,8 +77,8 @@ string handleRequest(string input) {
       piece initial = piece(pieces[0]);
       vector<int> nPieces = pieces;
       engineResult result = getBestMove(b, pieces);
-      vector<int> path = getPath(b, result.move, initial);
-      piece p = result.move;
+      vector<int> path = getPath(b, result.moves[0], initial);
+      piece p = result.moves[0];
       if (p.pieceType == nPieces[1]) swap(nPieces[0], nPieces[1]);
       nPieces.erase(nPieces.begin());
 

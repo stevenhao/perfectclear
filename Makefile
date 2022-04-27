@@ -17,6 +17,9 @@ server: server.cpp
 enginetest: enginetest.cpp
 	$(CXX) $(CXXFLAGS) -o enginetest.o enginetest.cpp
 
+trials: trials.cpp
+	$(CXX) $(CXXFLAGS) -o trials.o trials.cpp
+
 book: book.cpp
 	$(CXX) $(CXXFLAGS) -o book.o book.cpp
 

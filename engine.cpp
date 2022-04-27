@@ -14,6 +14,7 @@ struct gameState {
   vector<piece> trace;
   int bag;  // what's still in the bag?
   int index;
+  int score;
   bool isCleared() { return b.grid == 0; }
 };
 
@@ -161,7 +162,6 @@ int countNeeded(board &b) {
 }
 
 char BOOK_PATH[] = "book_100k.txt";
-int checkpoints[10];
 vector<unordered_map<ll, unordered_map<int, double>>> book(10);
 void loadBook() {
   printf("Loading book from %s...\n", BOOK_PATH);
@@ -214,29 +214,25 @@ double getBookScore(gameState &g, bool verbose = false) {
       if (missing > freedom || (p.first & ~(pmsk | ~g.bag))) continue;
       res *= max(0., 1 - p.second * pow(0.3, missing));
     }
-    ans += (1 - res) * needed > 1 ? 1 : 2;
+    ans += (1 - res) * (needed > 1 ? .7 : 1);
   }
 
   return ans;  // likelihood of winning from current position given pmsk
 }
 
 int getScore(gameState gameState) {
-  checkpoints[0]++;
   board b = gameState.b;
   if (b.grid == 0) return 1000000 * 10;
   // check for immediate fails
   if (badHeight(b)) {
     return -10 - getHeight(b);
   }
-  checkpoints[1]++;
   if (badMod4(b)) {
     return -2;
   }
-  checkpoints[2]++;
   if (badHoles(b)) {
     return -1;
   }
-  checkpoints[3]++;
 
   int needed = countNeeded(b);
   int holes = countHoles(b);
@@ -276,7 +272,7 @@ void setBeamSearchLimit(int limit) {
   printf("Beam search limit is now %d\n", limit);
 }
 
-pair<piece, double> getMostPopular(const vector<gameState> &gameStates) {
+vector<piece> getMostPopular(const vector<gameState> &gameStates, int num) {
   piece m;
   umap<piece, double> counts;
   double total = 0;
@@ -285,16 +281,26 @@ pair<piece, double> getMostPopular(const vector<gameState> &gameStates) {
     if (!sz(g.trace)) continue;
     piece p = g.trace[0];
     counts[p] += f;
-    total += f;
-    f *= 0.9;
-
-    if (counts[p] > counts[m]) {
-      m = p;
-    }
+    total += g.score;
   }
-  double ratio = counts[m] / max(1., total);
-  printf("mostPopular: %lf, %lf\n", counts[m], ratio);
-  return make_pair(m, ratio);
+  vector<piece> pieces;
+  umap<piece, int> idx;
+  for (auto p : counts) {
+    idx[p.first] = sz(pieces);
+    pieces.push_back(p.first);
+  }
+  vector<pair<double, int>> sorted;
+  for (auto p : counts) {
+    sorted.push_back({p.second, idx[p.first]});
+  }
+  sort(sorted.begin(), sorted.end());
+  reverse(sorted.begin(), sorted.end());
+  sorted.resize(num);
+  vector<piece> res;
+  for (auto p : sorted) {
+    res.push_back(pieces[p.second]);
+  }
+  return res;
 }
 
 /*
@@ -309,7 +315,6 @@ searchResult beamSearch(const vector<gameState> cur, int depth,
   if (!first) {
     for (auto g : cur) {
       if (g.isCleared()) {
-        printf("IT IS CLEARED!");
         searchResult s;
         s.gameStates.push_back(g);
         s.failed = false;
@@ -317,8 +322,7 @@ searchResult beamSearch(const vector<gameState> cur, int depth,
       }
     }
   }
-  if (depth == 0 ||
-      (depth <= earlyExitPopular && getMostPopular(cur).second > 0.3)) {
+  if (depth == 0) {
     searchResult s;
     s.gameStates = cur;
     s.failed = true;
@@ -339,12 +343,10 @@ searchResult beamSearch(const vector<gameState> cur, int depth,
     nxt.push_back(g);
   }
   seen.clear();
-  for (int i = 0; i < 4; ++i) {
-    checkpoints[i] = 0;
-  }
   vector<pii> scores(sz(nxt));
   for (int i = 0; i < sz(nxt); ++i) {
     scores[i] = pii(-getScore(nxt[i]), i);
+    nxt[i].score = scores[i].first;
   }
   sort(scores.begin(), scores.end());
   vector<gameState> filtered;
@@ -358,7 +360,6 @@ searchResult beamSearch(const vector<gameState> cur, int depth,
   searchResult nextRes = beamSearch(filtered, depth - 1);
   if (!nextRes.failed) return nextRes;
   if (getBookScore(filtered[0]) >= 1) {
-    printf("USING BOOK for score %lf!\n", getBookScore(filtered[0]));
     searchResult s;
     s.gameStates = {filtered[0]};
     s.failed = true;
@@ -368,7 +369,7 @@ searchResult beamSearch(const vector<gameState> cur, int depth,
 }
 
 struct engineResult {
-  piece move;
+  vector<piece> moves;
   int happy;
 };
 
@@ -385,18 +386,37 @@ board lastB;
 vector<int> lastP;
 vector<piece> lastT;
 
+engineResult _getBestMove(board b, vector<int> pieces) {
+  vector<gameState> inp = {{b, pieces}};
+  searchResult res = beamSearch(inp, sz(pieces), true);
+  if (!res.failed) {
+    gameState g = res.gameStates[0];
+    piece p = g.trace[0];
+    return {g.trace, 1};
+  } else {
+    vector<piece> shortlist = getMostPopular(res.gameStates, 3);
+    for (piece p : shortlist) {
+      searchResult res = beamSearch(inp, sz(pieces), true);
+      if (!res.failed) {
+        return {res.gameStates[0].trace, 1};
+      }
+    }
+    return {{shortlist[0]}, 0};
+  }
+}
+
 ll wins = 0;
 ll totalQueries = 0;
 ll hardQueries = 0;
-vector<int> winIndexes;
+
 engineResult getBestMove(board b, vector<int> pieces) {
   ++totalQueries;
   if (b.grid == lastB.grid && sz(lastP) && sz(pieces) && eq(pieces, lastP) &&
       sz(lastT)) {
-    printf("short circuiting\n");
+    vector<piece> moves = lastT;
     piece p = lastT[0];
-    lastT.erase(lastT.begin());
     lastB.add(p);
+    lastT.erase(lastT.begin());
     if (p.pieceType == lastP[0]) {
       lastP.erase(lastP.begin());
     } else if (sz(lastP) > 1) {
@@ -404,101 +424,25 @@ engineResult getBestMove(board b, vector<int> pieces) {
     }
     if (lastB.count() == 0) {
       ++wins;
-      printf("***PERFECT CLEAR***\n");
     }
-    return {p, 1};
+    return {moves, 1};
   }
   ++hardQueries;
-  // beam search
-  for (int i = 0; i < 4; ++i) {
-    checkpoints[i] = 0;
-  }
 
-  vector<gameState> inp(1);
-  int bag = 0;
-  for (int i : pieces) {
-    if ((bag >> i) & 1) bag = 0;
-    bag |= 1 << i;
-  }
-  inp[0] = {b, pieces};
-  inp[0].bag = bag;
-  // int tmpBeamSearchLimit = beamSearchLimit;
-  /* global cache hit rate 0.416820
-  hardQueries: 65, cacheMisses: 105538
-  wins: 12, totalQueries: 111; ratio: 0.108108 */
-  /*
-  300
-  IT IS CLEARED!global cache hit rate 0.137010
-hardQueries: 136, cacheMisses: 347652
-wins: 34, totalQueries: 263; ratio: 0.129278
-Win indexes:0 0 0 0 0 0 0 0 0 0 0 0 20 58 76 83 133 150 160 164 211 247 252 252
-268 269 282 282 284 285 291 292 296 296 IT IS POSSIBLE, index = 203 Board with
-piece:
-..........
-..........
-  */
-
-  // beamSearchLimit = 400; // ratio of cacheMisses:hardQueries = 2000 with this
-  // optimization ratio = 1576 with additional early exit ratio of
-  // cacheMisses:hardQueries = 3200 without earlyExitPopular = -1;
-
-  int needed = countNeeded(b);
-  int depth = sz(pieces);
-  depth = max(6, (needed + 1) % 5 + 4);  // 6..8 incl
-
-  searchResult res = beamSearch(inp, sz(pieces), true);
-  // beamSearchLimit = tmpBeamSearchLimit;
-  printf("global cache hit rate %lf\n",
-         1. * cacheHits / (cacheHits + cacheMisses));
-  printf("hardQueries: %lld, cacheMisses: %lld\n", hardQueries, cacheMisses);
-  printf("wins: %lld, totalQueries: %lld; ratio: %lf\n", wins, totalQueries,
-         1. * wins / totalQueries);
-  printf("Win indexes:");
-  for (int i : winIndexes) {
-    printf("%d ", i);
-  }
-  printf("\n");
-  if (!res.failed) {
-    printf("IT IS POSSIBLE, needed = %d\n index = %d\n", needed,
-           res.gameStates[0].index);
-    if (winIndexes.size() < 500) {
-      winIndexes.push_back(res.gameStates[0].index);
-    }
-    sort(winIndexes.begin(), winIndexes.end());
-    gameState g = res.gameStates[0];
-    lastB = b;
-    lastP = pieces;
-    lastT = g.trace;
-    piece p = lastT[0];
-    lastB.add(p);
-    if (p.pieceType == pieces[0]) {
-      lastP.erase(lastP.begin());
-    } else {
-      lastP.erase(lastP.begin() + 1);
-    }
-    lastT.erase(lastT.begin());
-    if (lastB.count() == 0) {
-      ++wins;
-      printf("***PERFECT CLEAR***\n");
-    }
-    return {p, 1};
+  engineResult res = _getBestMove(b, pieces);
+  piece p = res.moves[0];
+  lastB = b;
+  lastP = pieces;
+  lastT = res.moves;
+  lastB.add(p);
+  if (p.pieceType == pieces[0]) {
+    lastP.erase(lastP.begin());
   } else {
-    printf("BAD\n");
-    // earlyExitPopular = 2;
-    // res = beamSearch(inp, min(5, sz(pieces)), true);
-    piece p = getMostPopular(res.gameStates).first;
-    printf("Best continuation... ");
-    disp(res.gameStates[0].b);
-    printf("Best score: %d, %lf\n", getScore(res.gameStates[0]),
-           getBookScore(res.gameStates[0]));
-    if (!p.isNull()) {
-      return {p, 0};
-    } else {
-      printf("piece %d is null :(\n", p.pieceType);
-      vector<piece> v = getMoves(b, pieces[0]);
-      printf("Found %lu moves\n", v.size());
-      piece bestMove = v.back();
-      return {bestMove, -1};
-    }
+    lastP.erase(lastP.begin() + 1);
   }
+  lastT.erase(lastT.begin());
+  if (lastB.count() == 0) {
+    ++wins;
+  }
+  return res;
 }

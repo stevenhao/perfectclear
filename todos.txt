@@ -1,0 +1,19 @@
+- improve stream experience: music, last 10 outcomes (e.g. 5 10 10 10 20 10 15 5 10 10 10); 5 = gold, 10 = green, everything else = red
+  - stream interaction / chatbot
+  - display most recent clear in tetris diagram format (1-3 diagrams; new diagram whenever an out-of-order line clear occurs)
+
+- better testing/analysis tools for algorithm success rate
+  - benchmark it by generating a random sequence of 10 (with arbitrary 7-bag piece offset)
+ 
+- testing tools:
+  - given a set of 11-piece sequences, run them all through the engine and report what % fail.
+  - visualizations to aid analysis of a failing 11-piece sequence; better presentation of intermediate states like "best continuation after each move" and "book score", so that we can understand what the engine is thinking
+
+  
+- improve algorithm
+  - these should all be guided by analysis/backtesting tools; try to find a common thread between sequences that fail5
+  - HYPOTHESIS: sequences where there are repeats in the last 5 of the 11 pieces are more likely to fail
+    - if this explains 90% of the misses, then two approaches help:
+      - include repeat-piece positions in book
+      - use 7-bag awareness to run monte-carlo simulations with 11 piece queues on first move, 10 piece queues on second move 9 piece queues on third move, and picking the best move based on multiple (e.g. 10) trials
+     solution is to expand queue mask to 2^14 instead 2^7

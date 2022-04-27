@@ -41,6 +41,7 @@ app.post '/ai', (req, res) ->
     msg.reqid = reqCnt # in theory, this is "atomic"
     requests[msg.reqid] = res
     print('/ai: got request', msg)
+    msg.search_breadth = msg.search_breadth || 200
     client.write(JSON.stringify(msg));
   else
     res.send('bad request')

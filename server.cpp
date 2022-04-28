@@ -92,8 +92,8 @@ string handleRequest(string input) {
       printf("SCORE: %d; BOOK SCORE: %lf\n", getScore({nb, {}, {}, 0}),
              getBookScore(nGameState, false));  // TODO queue
       vector<string> pathStrings;
+      pathStrings.push_back(toString(initial));
       p = piece(p.pieceType);
-      pathStrings.push_back(toString(p));
       for (auto i : path) {
         p = apply(i, p, b);
         pathStrings.push_back(toString(p));

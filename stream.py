@@ -51,6 +51,9 @@ class Game:
         for i in range(8):
             self.push_to_queue()
 
+    def is_empty(self):
+        return all(x is None for y in self.board for x in y)
+
     def push_to_queue(self):
         if not len(self.bag):
             self.bag = make_bag()
@@ -58,7 +61,7 @@ class Game:
 
     def add_piece(self, piece):
         idx = 1 if self.queue[0] == piece.t else 0
-        self.queue = [self.queue[idx]] + self.queue[2:]
+        self.queue = [self.queue[2], self.queue[idx]] + self.queue[3:]
         self.push_to_queue()
 
         for (i, j) in piece.blocks:
@@ -93,15 +96,15 @@ class Game:
             if hold == piece.t:
                 hold, cur = cur, hold
         board = self.board
-        return draw_game(hold, piece.blocks if piece is not None else [], piece.t if piece is not None else None, preview, board, img_width, img_height)
+        return draw_game(hold, piece.blocks if piece is not None else [], piece.t if piece is not None else None, preview, board, None, img_width, img_height)
 
     def snapshot(self, piece):
-        hold = self.queue[0]
+        hold = self.queue[1]
         cur = None
         if piece is None:
-            preview = self.queue[1:-1]
+            preview = [self.queue[0]] + self.queue[2:-1]
         else:
-            cur = self.queue[1]
+            cur = self.queue[0]
             preview = self.queue[2:]
             if hold == piece.t:
                 hold, cur = cur, hold
@@ -125,13 +128,29 @@ class Game:
                 ]
             }
 
+class Tracker:
+    def __init__(self):
+        self.cur_count = 0
+        self.last_10 = []
+
+    def log_piece(self, game):
+        self.cur_count += 1
+        if game.is_empty():
+            self.last_10.append(self.cur_count)
+            self.cur_count = 0
+            if len(self.last_10) > 10:
+                self.last_10 = self.last_10[-10:]
+    
+    def snapshot(self):
+        return self.last_10[:]
 class Stream:
     def __init__(self, width, height, video_fps, fps):
         self.game = Game(10, 10)
+        self.tracker = Tracker()
         self.width = width
         self.height = height
         self.path = None
-        self.path_idx = 0
+        self.path_idx = None
         self.video_fps = video_fps
         self.fps = fps
         self.last_frame = None
@@ -147,27 +166,34 @@ class Stream:
         path_strings = result['pathStrings']
         idx = 1 if result['path'][0] == 5 else 0
         t = self.game.queue[idx]
-        self.path = [Piece(t, s) for s in path_strings]
+        print('idx', idx, 't', t)
+        print(self.game.queue)
+        print(result['path'])
+        self.path = [Piece(self.game.queue[0] if s == path_strings[0] else t, s) for s in path_strings]
         self.path_idx = 0
+        for p, pp in zip(path_strings, self.path):
+            print(pp.t, pp.blocks)
+            print(p)
         # print(self.path)
 
     def get_snapshot(self, search_breadth=300):
         if not self.path:
-            result = self.game.snapshot(None)
-            self.get_path(search_breadth) # for next round
-        elif self.path_idx == len(self.path):
+            self.get_path(search_breadth)
+        if self.path_idx == len(self.path):
             self.game.add_piece(self.path[-1])
-            result = self.game.snapshot(None)
-            self.path = None
+            game_snapshot = self.game.snapshot(None)
+            self.get_path(search_breadth) # for next round
+            self.tracker.log_piece(self.game)
         else:
             piece = self.path[self.path_idx]
             self.path_idx += 1
-            result = self.game.snapshot(piece)
-        return result
+            game_snapshot = self.game.snapshot(piece)
+        tracker_snapshot = self.tracker.snapshot()
+        return (game_snapshot, tracker_snapshot)
 
     def get_frame(self):
+        self.counter += 1
         if not(self.last_frame is None) and self.counter < self.video_fps / self.fps:
-            self.counter += 1
             return self.last_frame
         if len(self.snapshots) == 0:
             self.prebuffer()

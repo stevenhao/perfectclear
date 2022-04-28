@@ -112,7 +112,7 @@ void disp(board b, piece move) {
   clear(buf);
   write(border, buf, 'O');
   write(b.grid, buf, '*');
-  write(move.blocks(), buf, '+');
+  write(move.blocks(), buf, 'O');
   print(cout, buf);
 
   //  vector<int> moves = getPath(b, move);
@@ -153,6 +153,12 @@ string toString(piece p) {
   write(border, buf, 'O');
   write(p.blocks(), buf, '+');
   return toString(buf);
+}
+
+char _buf[100];
+string repr(piece p) {
+  sprintf(_buf, "%d dt=%d dx=%d dy=%d", p.pieceType, p.dt, p.dxy.x, p.dxy.y);
+  return string(_buf);
 }
 
 ostream &operator<<(ostream &os, const board &b) {

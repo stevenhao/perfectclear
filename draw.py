@@ -18,6 +18,7 @@ def draw_game(
     cur_piece_type: Union[int, None],
     preview: List[int], # = stream.game.queue[2:]
     orig_board: List[List[Union[int, None]]], # = stream.game.board
+    tracker_snapshot, # list of numbers
     img_width,
     img_height
 ):
@@ -120,8 +121,18 @@ def draw_game(
             else:
                 continue
             rect(((bx + j * c1, by + i * c1), (bx + (j + 1) * c1, by + (i + 1) * c1)), color)    
+    
+    # draw tracker
+    if tracker_snapshot is not None:
+        for i in tracker_snapshot:
+            text = str(i)
+            text_size = draw.textsize(text)
+            # TODO
+            # draw.text((bx - c3 - 5 * c2 + 2.5 * c2 - 0.5 * text_size[0], by - c3 + 0.5 * c4 - 0.5 * hold_text_size[1]), hold_text, fill=(0, 0, 0), anchor="mm", color=line_color)
+
     return image
 
-def draw_snapshot(snapshot, img_width, img_height):
-    (hold, cur_piece_blocks, cur_piece_type, preview, board) = snapshot
-    return draw_game(hold, cur_piece_blocks, cur_piece_type, preview, board, img_width, img_height)
+def draw_snapshot(stream_snapshot, img_width, img_height):
+    game_snapshot, tracker_snapshot = stream_snapshot
+    (hold, cur_piece_blocks, cur_piece_type, preview, board) = game_snapshot
+    return draw_game(hold, cur_piece_blocks, cur_piece_type, preview, board, tracker_snapshot, img_width, img_height)

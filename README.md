@@ -23,4 +23,7 @@ Let's get a perfect clear!
 ## Book
 `make book && ./book.o | tee book_100k.txt # or any other file name; edit book.cpp to control the size`
 
+# Deployment
+See [DEPLOYMENT.md](DEPLOYMENT.md) for instructions on deploying the application using Docker.
+
 Have fun!

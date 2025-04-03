@@ -1,6 +1,7 @@
 - improve stream experience: music, last 10 outcomes (e.g. 5 10 10 10 20 10 15 5 10 10 10); 5 = gold, 10 = green, everything else = red
   - stream interaction / chatbot
   - display most recent clear in tetris diagram format (1-3 diagrams; new diagram whenever an out-of-order line clear occurs)
+  - add documentation for API endpoints used by the web client
 
 - better testing/analysis tools for algorithm success rate
   - benchmark it by generating a random sequence of 10 (with arbitrary 7-bag piece offset)

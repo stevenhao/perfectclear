@@ -86,6 +86,43 @@
 
 4. Access the application via the LoadBalancer IP or domain name
 
+## Deploy to Fly.io
+
+To deploy this application to Fly.io:
+
+1. Install the Fly.io CLI:
+   ```
+   curl -L https://fly.io/install.sh | sh
+   ```
+
+2. Set up environment variables:
+   ```
+   export FLYCTL_INSTALL="/home/ubuntu/.fly"
+   export PATH="$FLYCTL_INSTALL/bin:$PATH"
+   ```
+
+3. Authenticate with Fly.io:
+   ```
+   flyctl auth login
+   ```
+
+4. Launch the application:
+   ```
+   flyctl launch --name perfectclear-app
+   ```
+
+5. Deploy the application:
+   ```
+   flyctl deploy
+   ```
+
+6. Access the application:
+   ```
+   flyctl open
+   ```
+
+The application will be available at https://perfectclear-app.fly.dev
+
 ## Notes
 - The application runs on port 4444 by default
 - The Docker container runs both the C++ backend and the CoffeeScript web server

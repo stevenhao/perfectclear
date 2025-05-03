@@ -1,6 +1,6 @@
 # perfectclear
 
-Let's get a perfect clear!
+Let's get a perfect clear! This is a Tetris-related project.
 
 # Running locally
 

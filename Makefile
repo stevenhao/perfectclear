@@ -1,4 +1,4 @@
-all: server enginetest book vis
+all: server enginetest book
 
 OS_NAME=$(shell uname -s)
 CXX=g++-9

@@ -231,8 +231,23 @@ $ ->
       renderBoardWithPiece(board, curPiece)
       renderPreview(preview)
 
+    resetGame = () ->
+      Board.reset(board)
+      bag = makeBag()
+      nextBag = makeBag()
+      hold = null
+      counter.pieces = 0
+      counter.clears = 0
+      curPiece = nextPiece()
+      renderHold(hold)
+      renderBoardWithPiece(board, curPiece)
+      renderPreview(preview)
+      renderCounter(counter)
+      save()
+
     $('#undo').click(undo)
     $('#redo').click(redo)
+    $('#reset').click(resetGame)
 
     movecount = 0
     renderBoardWithPiece(board, curPiece)

@@ -1,9 +1,14 @@
 {
   "name": "tetris2",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "description": "Perfect Clear Tetris Game",
+  "main": "index.coffee",
   "scripts": {
+    "start": "coffee index.coffee 4445",
+    "start:backend": "./server.o 4445",
+    "dev:frontend": "nodemon --ext coffee,js,html,css --watch index.coffee --watch public --exec \"coffee index.coffee 4445\"",
+    "dev:backend": "./server.o 4445",
+    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "",
@@ -11,5 +16,13 @@
   "dependencies": {
     "body-parser": "^1.15.0",
     "express": "^4.13.4"
+  },
+  "devDependencies": {
+    "coffeescript": "^1.12.7",
+    "concurrently": "^8.2.2",
+    "nodemon": "^3.0.3"
+  },
+  "engines": {
+    "node": ">=14.0.0"
   }
 }

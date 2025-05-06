@@ -1,15 +1,28 @@
 {
   "version": 2,
   "builds": [
-    { "src": "public/**", "use": "@vercel/static" },
-    { "src": "dist/**", "use": "@vercel/node" }
+    { "src": "public/**", "use": "@vercel/static" }
   ],
   "routes": [
-    { "src": "/server-status", "dest": "/dist/index.js" },
-    { "src": "/ai", "dest": "/dist/index.js" },
+    { 
+      "src": "/(.*\\.wasm)",
+      "dest": "/public/$1",
+      "headers": { "content-type": "application/wasm" }
+    },
+    { 
+      "src": "/(.*\\.data)",
+      "dest": "/public/$1",
+      "headers": { "content-type": "application/octet-stream" }
+    },
     { "src": "/(.*)", "dest": "/public/$1" }
   ],
-  "env": {
-    "BACKEND_HOST": "REPLACE_WITH_BACKEND_URL"
-  }
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        { "key": "Cross-Origin-Opener-Policy", "value": "same-origin" },
+        { "key": "Cross-Origin-Embedder-Policy", "value": "require-corp" }
+      ]
+    }
+  ]
 }

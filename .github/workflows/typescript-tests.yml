@@ -26,4 +26,6 @@ jobs:
       run: yarn build
     
     - name: Run Jest tests
-      run: yarn test
+      run: yarn test --detectOpenHandles --forceExit
+      env:
+        CI: true

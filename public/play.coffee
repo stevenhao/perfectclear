@@ -409,11 +409,19 @@ $ ->
 
     $('#autoplay').click (evt) ->
       if autoplaying
-        $('#autoplay').text('Autoplay')
+        if window.zenMode
+          $('#play-icon').show()
+          $('#pause-icon').hide()
+        else
+          $('#autoplay').text('Autoplay')
         autoplaying = false
         window.autoplaying = false
       else
-        $('#autoplay').text('Pause')
+        if window.zenMode
+          $('#play-icon').hide()
+          $('#pause-icon').show()
+        else
+          $('#autoplay').text('Pause')
         autoplaying = true
         window.autoplaying = true
         autoplayStep()

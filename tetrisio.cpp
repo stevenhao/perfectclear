@@ -1,10 +1,5 @@
-#include <cstring>
-#include <fstream>
-#include <iostream>
-#include <sstream>
+#include "tetrisio.h"
 using namespace std;
-
-#include "tetris.cpp"
 
 string pieceNames = "IJLOSTZ";
 int getPieceIndex(string s) {

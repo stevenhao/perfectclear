@@ -77,5 +77,16 @@
       </div>
     </div>
   </div>
+  <!-- Add WASM-related scripts -->
+  <script src="/wasm/data_loader.js"></script>
+  <script src="/wasm/wasm_loader.js"></script>
+  <script>
+    // Initialize WASM module when the page loads
+    document.addEventListener('DOMContentLoaded', () => {
+      initWasmModule().catch(error => {
+        console.error('Failed to initialize WASM module:', error);
+      });
+    });
+  </script>
 </body>
 </html>

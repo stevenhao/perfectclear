@@ -4,7 +4,11 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js",
+    "build:wasm": "make -f wasm.mk",
+    "build:coffee": "coffee -c public/*.coffee",
+    "build": "npm run build:wasm && npm run build:coffee"
   },
   "author": "",
   "license": "ISC",

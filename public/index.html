@@ -178,12 +178,7 @@
         $(this).toggleClass('collapsed');
       });
 
-      // Handle keyboard interactions to pause AI
-      $(document).on('keydown', function(e) {
-        if (window.autoplaying) {
-          $('#autoplay').click(); // Pause the AI
-        }
-      });
+      // Keyboard interactions removed as requested
       
       // Fullscreen functionality
       $('#fullscreen-btn').on('click', function() {

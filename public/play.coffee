@@ -34,24 +34,45 @@ $ ->
         })
         $el.appendTo($board)
         
-  # Recalculate board when window resizes
-  $(window).on 'resize', ->
+  # Recalculate board when window resizes or fullscreen changes
+  resizeHandler = ->
+    console.log('Resize detected, recalculating board dimensions')
+    
     # Force recalculation of cell size based on current window dimensions
     makeBoard()
     
-    # Store global references to board and piece for resize events
-    window.board = board if board && !window.board
-    window.curPiece = curPiece if curPiece && !window.curPiece
+    # Always update global references to current game state
+    window.board = board if board
+    window.curPiece = curPiece if curPiece
+    window.preview = preview if preview
+    window.hold = hold if hold
+    
+    # Make sure renderBoardWithPiece is defined globally
+    window.renderBoardWithPiece = renderBoardWithPiece if renderBoardWithPiece
+    window.renderPreview = renderPreview if renderPreview
+    window.renderHold = renderHold if renderHold
     
     # Re-render the board with the current piece
-    if window.board && window.curPiece
-      renderBoardWithPiece(window.board, window.curPiece)
-      
+    if window.board && window.curPiece && window.renderBoardWithPiece
+      console.log('Re-rendering board with piece')
+      window.renderBoardWithPiece(window.board, window.curPiece)
+    
     # Also update preview and hold if they exist
     if window.preview && window.renderPreview
+      console.log('Re-rendering preview')
       window.renderPreview(window.preview)
     if window.hold && window.renderHold
+      console.log('Re-rendering hold')
       window.renderHold(window.hold)
+  
+  # Listen for window resize events
+  $(window).on 'resize', resizeHandler
+  
+  # Listen for fullscreen change events across browsers
+  document.addEventListener('fullscreenchange', resizeHandler)
+  document.addEventListener('webkitfullscreenchange', resizeHandler)
+  document.addEventListener('mozfullscreenchange', resizeHandler)
+  document.addEventListener('MSFullscreenChange', resizeHandler)
 
   renderBoard = (board) ->
     [w, h] = getDims($board)

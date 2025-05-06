@@ -1,5 +1,7 @@
 import { Board } from './board';
 
+type PieceType = 'I' | 'J' | 'L' | 'O' | 'S' | 'T' | 'Z';
+
 const PieceData = {
   pieceLocs: {
     I: [[-1.5, 0.5], [-0.5, 0.5], [0.5, 0.5], [1.5, 0.5]],
@@ -68,30 +70,30 @@ export const Location = {
 };
 
 export const PieceType = {
-  blocks: (pieceType: string, rotation = 0) => 
-    PieceData.pieceLocs[pieceType].map(Location.rotate(rotation)),
+  blocks: (pieceType: PieceType, rotation = 0) => 
+    PieceData.pieceLocs[pieceType].map((loc) => Location.rotate(rotation)(loc as [number, number])),
 
-  getIndex: (pieceType: string) => 
+  getIndex: (pieceType: PieceType) => 
     PieceData.pieceIndices[pieceType]
 };
 
 export interface PieceInterface {
   location: [number, number];
   rotation: number;
-  pieceType: string;
+  pieceType: PieceType;
   blocks: () => [number, number][];
 }
 
 export class Piece {
-  static create(pieceType: string, board: number[][]): PieceInterface {
+  static create(pieceType: PieceType, board: number[][]): PieceInterface {
     const [w, h] = Board.dims(board);
     const piece = {
-      location: PieceData.startingLocations[pieceType](w, h),
+      location: PieceData.startingLocations[pieceType](w, h) as [number, number],
       rotation: 0,
       pieceType: pieceType,
       blocks: function() {
         return PieceType.blocks(this.pieceType, this.rotation)
-          .map(Location.translate(this.location));
+          .map((loc) => Location.translate(this.location as [number, number])(loc));
       }
     };
     
@@ -112,7 +114,7 @@ export class Piece {
     for (const offset of this.getKicks(piece, 'A')) {
       const testPiece = { 
         ...newPiece, 
-        location: Location.translate(offset)(piece.location)
+        location: Location.translate(offset as [number, number])(piece.location)
       };
       
       if (Board.canAddPiece(board, testPiece)) {
@@ -129,7 +131,7 @@ export class Piece {
     for (const offset of this.getKicks(piece, 'B')) {
       const testPiece = { 
         ...newPiece, 
-        location: Location.translate(offset)(piece.location)
+        location: Location.translate(offset as [number, number])(piece.location)
       };
       
       if (Board.canAddPiece(board, testPiece)) {

@@ -1,5 +1,8 @@
 
+
 mkdir -p dist
+
+cp pieces centers kicks book_100k.txt dist/
 
 emcc -O3 \
      wasm_bindings.cpp \
@@ -11,5 +14,8 @@ emcc -O3 \
      -s ALLOW_MEMORY_GROWTH=1 \
      -s MODULARIZE=1 \
      -s 'EXPORT_NAME="createPerfectClear"'
+
+mkdir -p public/dist
+cp dist/perfectclear.js dist/perfectclear.wasm public/dist/
 
 echo "WebAssembly compilation complete!"

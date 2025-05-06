@@ -1,8 +1,12 @@
 #include <emscripten.h>
 #include <cstdlib>
 #include <string>
+#include <sstream>
 #include "json.hpp"
+
+#define queue pieceQueue
 #include "engine.cpp"
+#undef queue
 
 using json = nlohmann::json;
 using namespace std;
@@ -11,6 +15,44 @@ char* allocateString(const std::string& str) {
     char* result = (char*)malloc(str.length() + 1);
     strcpy(result, str.c_str());
     return result;
+}
+
+int toInt(string s) {
+  int i;
+  stringstream ss;
+  ss << s;
+  ss >> i;
+  return i;
+}
+
+board readBoard(json j) {
+  if (j["W"].is_string() && j["H"].is_string() && j["data"].is_string()) {
+    int _W = toInt(j["W"].get<string>());
+    int _H = toInt(j["H"].get<string>());
+    string s = j["data"].get<string>();
+    if (_W != W || _H != H) throw runtime_error("Board dimensions mismatch");
+    char buf[MAXN][MAXN];
+
+    int cnt = 0;
+    for (int i = 0; i < H; ++i) {
+      for (int j = 0; j < W; ++j) {
+        buf[i][j] = s[cnt];
+        ++cnt;
+      }
+    }
+    return board(buf, '0');
+  } else {
+    throw runtime_error("Cannot parse board");
+  }
+}
+
+vector<int> readPieces(json j) {
+  vector<string> v = j.get<vector<string>>();
+  vector<int> ret;
+  for (auto &s : v) {
+    ret.push_back(getPieceIndex(s));
+  }
+  return ret;
 }
 
 extern "C" {

@@ -166,13 +166,6 @@
         }
       });
       
-      // Start autoplay automatically
-      setTimeout(function() {
-        if (!window.autoplaying) {
-          $('#autoplay').click();
-        }
-      }, 1000);
-
       // Toggle status indicator on click
       $('#status-container').on('click', function() {
         $(this).toggleClass('collapsed');

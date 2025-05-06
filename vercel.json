@@ -1,17 +1,34 @@
 {
   "version": 2,
   "builds": [
-    { "src": "public/**", "use": "@vercel/static" },
-    { "src": "dist/**", "use": "@vercel/node" }
+    { "src": "public/**", "use": "@vercel/static" }
   ],
-  "routes": [
-    { "src": "/server-status", "dest": "/dist/index.js" },
-    { "src": "/ai", "dest": "/dist/index.js" },
-    { "src": "/zen", "dest": "/public/zen.html" },
-    { "src": "/(.*)\\.html", "dest": "/public/$1.html" },
-    { "src": "/(.*)", "dest": "/public/$1" }
+  "rewrites": [
+    { "source": "/(.*)", "destination": "/public/$1" }
   ],
-  "env": {
-    "BACKEND_HOST": "REPLACE_WITH_BACKEND_URL"
-  }
+  "headers": [
+    {
+      "source": "/(.*\\.wasm)",
+      "headers": [
+        { "key": "Content-Type", "value": "application/wasm" },
+        { "key": "Cross-Origin-Opener-Policy", "value": "same-origin" },
+        { "key": "Cross-Origin-Embedder-Policy", "value": "require-corp" }
+      ]
+    },
+    {
+      "source": "/(.*\\.data)",
+      "headers": [
+        { "key": "Content-Type", "value": "application/octet-stream" },
+        { "key": "Cross-Origin-Opener-Policy", "value": "same-origin" },
+        { "key": "Cross-Origin-Embedder-Policy", "value": "require-corp" }
+      ]
+    },
+    {
+      "source": "/(.*)",
+      "headers": [
+        { "key": "Cross-Origin-Opener-Policy", "value": "same-origin" },
+        { "key": "Cross-Origin-Embedder-Policy", "value": "require-corp" }
+      ]
+    }
+  ]
 }

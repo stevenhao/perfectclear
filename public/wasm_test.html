@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>PerfectClear WASM Test</title>
+  <script src="dist/perfectclear.js"></script>
+  <script>
+    // Set the locateFile function to correctly find the .data file
+    var Module = {
+      locateFile: function(path) {
+        if (path.endsWith('.data')) return path;
+        return path;
+      }
+    };
+  </script>
+  <script src="perfectclear-wasm.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+    }
+    #status {
+      margin-bottom: 20px;
+      padding: 10px;
+      background-color: #f0f0f0;
+      border-radius: 5px;
+    }
+    button {
+      padding: 10px;
+      margin: 5px;
+      cursor: pointer;
+    }
+    pre {
+      background-color: #f5f5f5;
+      padding: 10px;
+      border-radius: 5px;
+      overflow: auto;
+    }
+    .log {
+      font-family: monospace;
+      font-size: 12px;
+      margin-top: 10px;
+      color: #666;
+    }
+  </style>
+</head>
+<body>
+  <h1>PerfectClear WASM Test</h1>
+  <div id="status">Loading WASM module...</div>
+  <button id="testButton" disabled>Test WASM AI Move</button>
+  <h2>Results:</h2>
+  <pre id="results"></pre>
+  <div class="log" id="log"></div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const statusEl = document.getElementById('status');
+      const resultsEl = document.getElementById('results');
+      const testButton = document.getElementById('testButton');
+      const logEl = document.getElementById('log');
+      
+      // Create a valid board for testing
+      // The board is 10x10 with '0' for empty cells and '1' for filled cells
+      // Note: In perfectclear, the board dimensions are W=10, H=10
+      const testBoard = Array(10).fill().map(() => Array(10).fill('0'));
+      
+      // Add a few blocks to create a realistic scenario
+      // Fill in a pattern that should allow for valid moves
+      testBoard[0][0] = '1';
+      testBoard[1][0] = '1';
+      testBoard[2][0] = '1';
+      testBoard[4][0] = '1';
+      testBoard[5][0] = '1';
+      testBoard[6][0] = '1';
+      testBoard[8][0] = '1';
+      testBoard[9][0] = '1';
+      
+      // Valid piece types for perfectclear: I, O, T, J, L, S, Z (0-6)
+      // Only use the first piece to simplify the test
+      const testPieces = ['I'];
+      
+      // Override console.log to display in the log div
+      const originalLog = console.log;
+      const originalError = console.error;
+      
+      console.log = function() {
+        const args = Array.from(arguments);
+        logEl.innerHTML += `<div>LOG: ${args.join(' ')}</div>`;
+        originalLog.apply(console, args);
+      };
+      
+      console.error = function() {
+        const args = Array.from(arguments);
+        logEl.innerHTML += `<div style="color: red">ERROR: ${args.join(' ')}</div>`;
+        originalError.apply(console, args);
+      };
+      
+      // Create a Board object for encoding
+      window.Board = {
+        encode: function(board) {
+          return board.flat().join('');
+        }
+      };
+      
+      // Load WASM module
+      loadWasmModule().then(() => {
+        statusEl.textContent = 'WASM module loaded successfully!';
+        statusEl.style.backgroundColor = '#d4edda';
+        testButton.disabled = false;
+      }).catch(error => {
+        statusEl.textContent = 'Failed to load WASM module: ' + error;
+        statusEl.style.backgroundColor = '#f8d7da';
+        console.error('WASM module loading error:', error);
+      });
+      
+      // Test button click handler
+      testButton.addEventListener('click', function() {
+        try {
+          resultsEl.textContent = 'Calculating best move...';
+          
+          // Display the board for debugging
+          console.log('Test board:');
+          for (let j = testBoard[0].length - 1; j >= 0; j--) {
+            let row = '';
+            for (let i = 0; i < testBoard.length; i++) {
+              row += testBoard[i][j];
+            }
+            console.log(row);
+          }
+          
+          // Call the WASM AI move function
+          wasmAiMove(testBoard, testPieces, 200, function(result) {
+            if (result.error) {
+              resultsEl.textContent = 'Error: ' + result.error + '\n\nDetails:\n' + 
+                JSON.stringify(result.details || {}, null, 2);
+            } else {
+              resultsEl.textContent = 'AI Move Result:\n' + JSON.stringify(result, null, 2);
+            }
+          });
+        } catch (error) {
+          resultsEl.textContent = 'Error: ' + error;
+          console.error('Test error:', error);
+        }
+      });
+    });
+  </script>
+</body>
+</html>

@@ -1,5 +1,19 @@
 <html>
 <head>
+  <!-- Load WASM module -->
+  <script>
+    // Configure Module for Emscripten before loading the WASM module
+    var Module = {
+      locateFile: function(path) {
+        if (path.endsWith('.wasm')) return 'dist/' + path;
+        if (path.endsWith('.data')) return 'dist/' + path;
+        return path;
+      }
+    };
+  </script>
+  <script src="dist/perfectclear.js"></script>
+  <script src="perfectclear-wasm.js"></script>
+  
   <!-- Latest compiled and minified JavaScript -->
   <script type="text/coffeescript" src="steven.coffee"></script>
   <script type="text/coffeescript" src="tetris.coffee"></script>
@@ -101,6 +115,13 @@
     $(document).ready(function() {
       // Set a flag to identify zen mode
       window.zenMode = true;
+      
+      // Initialize the WASM module
+      loadWasmModule().then(() => {
+        console.log('WASM module loaded successfully in zen mode');
+      }).catch(error => {
+        console.error('Failed to load WASM module in zen mode:', error);
+      });
       
       // Override the autoplay click handler to toggle icons
       $('#autoplay').off('click').on('click', function() {

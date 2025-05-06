@@ -24,8 +24,9 @@ requests = {}
 reqCnt = 0
 
 port = process.argv[2] || 4445
+backendHost = process.env.BACKEND_HOST || 'localhost'
 net = require('net');
-client = net.createConnection {port}, -> 
+client = net.createConnection {host: backendHost, port}, -> 
   # 'connect' listener
   console.log('connected to server!');
 

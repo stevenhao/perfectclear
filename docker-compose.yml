@@ -1,0 +1,32 @@
+version: '3'
+
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "4445:4445"
+    volumes:
+      - ./pieces:/app/pieces
+      - ./centers:/app/centers
+      - ./kicks:/app/kicks
+      - ./book_100k.txt:/app/book_100k.txt
+    restart: unless-stopped
+
+  frontend:
+    image: node:16
+    working_dir: /app
+    volumes:
+      - ./:/app
+    ports:
+      - "4444:4444"
+    depends_on:
+      - backend
+    command: >
+      bash -c "yarn global add coffeescript &&
+               yarn &&
+               coffee index.coffee 4445"
+    environment:
+      - BACKEND_HOST=backend
+      - PORT=4444

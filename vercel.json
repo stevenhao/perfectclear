@@ -1,0 +1,14 @@
+{
+  "version": 2,
+  "builds": [
+    { "src": "package.json", "use": "@vercel/node" }
+  ],
+  "routes": [
+    { "src": "/server-status", "dest": "/dist/index.js" },
+    { "src": "/ai", "dest": "/dist/index.js" },
+    { "src": "/(.*)", "dest": "/public/$1" }
+  ],
+  "env": {
+    "BACKEND_HOST": "REPLACE_WITH_BACKEND_URL"
+  }
+}

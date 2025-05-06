@@ -27,6 +27,12 @@
       justify-content: center;
       align-items: center;
     }
+    /* Maximize game well size */
+    #game-outer {
+      width: 80vh !important;
+      height: 80vh !important;
+      margin: 0 auto;
+    }
     .panel {
       background-color: #1e1e1e;
       border: 1px solid #333;
@@ -48,49 +54,40 @@
 </head>
 <body class="zen-mode-body">
   <div class="zen-mode">
-    <div class="container-fluid">
-      <div class="row">
-        <div class="col-md-6">
-          <div class="panel panel-default">
-            <div class="panel-heading">
-            <h3 class="panel-title">💯💯💯💯💯</h3>
-            </div>
-            <div class="panel-body" style="position:relative; text-align: center;">
-              <!-- "Send Next Piece" button removed -->
-              <button id="autoplay" type="button" class="btn btn-block">Pause</button>
+    <div class="container-fluid" style="width: 100%; height: 100%;">
+      <div class="row" style="height: 100%;">
+        <div class="col-md-12">
+          <div class="panel panel-default" style="height: 95vh;">
+            <div class="panel-heading" style="display: flex; justify-content: space-between;">
+              <h3 class="panel-title">💯💯💯💯💯</h3>
               <div>
-                <button class="btn " id="undo">Undo</button>
-                <button class="btn " id="redo">Redo</button>
-                <button class="btn " id="reset">Reset</button>
+                <button id="autoplay" type="button" class="btn btn-sm">Pause</button>
+                <button class="btn btn-sm" id="reset">Reset</button>
+                <label style="cursor: pointer; margin-left: 10px;"><input type="checkbox" id="fast-controller"/>Faster</label>
               </div>
-              <div>
-                <label style="cursor: pointer;"><input type="checkbox" id="stop-controller"/> Stop when solution is found</label>
-              </div>
-              <div>
-                <label style="cursor: pointer;"><input type="checkbox" id="fast-controller"/>Faster</label>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div class="col-md-6">
-          <div class="panel panel-default">
-            <div class="panel-heading">
               <h3 class="panel-title" id="happy-indicator">🤓</h3>
             </div>
-            <div class="panel-body" style="position:relative">
-              <div id="hold" style="float:left; margin-left:1em;position:relative;width:6em;height:6em; background-color: black">
+            <div class="panel-body" style="position: relative; height: calc(95vh - 50px); display: flex; justify-content: center; align-items: center;">
+              <div id="hold" style="position: absolute; left: 10px; top: 10px; width: 8vh; height: 8vh; background-color: black">
               </div>
 
-              <div id="game-outer" style="float:left;position:relative;width:20em;height:20em;"> <!-- for now, it will be a horizontal well -->
+              <div id="game-outer" style="position: relative; width: 85vh; height: 85vh;"> <!-- much bigger game well -->
                 <div id="game-inner" h="10" w="10" class="grid">
                 </div>
               </div>
 
-              <div id="previews" style="float:left; margin-left:1em;position:relative;width:4em;height:20em; background-color: black">
+              <div id="previews" style="position: absolute; right: 10px; top: 10px; width: 8vh; height: 40vh; background-color: black">
               </div>
-            </div>
-            <div id="counter" style="padding: 20px; font-size: 14pt;" class="counter">
-              0
+              
+              <div id="counter" style="position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%); font-size: 24pt;" class="counter">
+                0
+              </div>
+              
+              <div style="position: absolute; bottom: 10px; left: 10px;">
+                <button class="btn btn-sm" id="undo">Undo</button>
+                <button class="btn btn-sm" id="redo">Redo</button>
+                <label style="cursor: pointer; margin-left: 10px;"><input type="checkbox" id="stop-controller"/> Stop when solution is found</label>
+              </div>
             </div>
           </div>
         </div>

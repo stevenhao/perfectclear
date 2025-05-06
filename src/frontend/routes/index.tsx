@@ -15,20 +15,20 @@ const rootRoute = createRootRoute({
 const indexRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/',
-  component: HomePage
-});
-
-const zenRoute = createRoute({
-  getParentRoute: () => rootRoute,
-  path: '/zen',
   component: ZenPage
 });
 
-const routeTree = rootRoute.addChildren([indexRoute, zenRoute]);
+const debugRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/debug',
+  component: HomePage
+});
+
+const routeTree = rootRoute.addChildren([indexRoute, debugRoute]);
 
 export const router = createRouter({ routeTree });
 
-declare module '@tanstack/router' {
+declare module '@tanstack/react-router' {
   interface Register {
     router: typeof router;
   }

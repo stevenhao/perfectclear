@@ -1,0 +1,106 @@
+<html>
+<head>
+  <!-- Latest compiled and minified JavaScript -->
+  <!-- Load WASM module -->
+  <script>
+    // Configure Module for Emscripten before loading the WASM module
+    var Module = {
+      locateFile: function(path) {
+        if (path.endsWith('.wasm')) return 'dist/' + path;
+        if (path.endsWith('.data')) return 'dist/' + path;
+        return path;
+      }
+    };
+  </script>
+  <script src="dist/perfectclear.js"></script>
+  <script src="perfectclear-wasm.js"></script>
+  
+  <!-- Original scripts -->
+  <script type="text/coffeescript" src="steven.coffee"></script>
+  <script type="text/coffeescript" src="tetris.coffee"></script>
+  <script type="text/coffeescript" src="play.coffee"></script>
+  <script type="text/javascript" src="coffee-script.js"></script>
+  <script src="jquery.min.js"></script>
+  <link rel="stylesheet" href="css/bootstrap.min.css">
+  <link rel="stylesheet" href="css/tetris.css">
+</head>
+<body>
+  <nav class="navbar navbar-default">
+    <div class="container-fluid">
+      <!-- Brand and toggle get grouped for better mobile display -->
+      <div class="navbar-header"> <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1" aria-expanded="false"> <span class="sr-only">Toggle navigation</span> <span class="icon-bar"></span> <span class="icon-bar"></span> <span class="icon-bar"></span> </button> <a class="navbar-brand" href="#">Bbbb</a> </div>
+      <!-- Collect the nav links, forms, and other content for toggling -->
+      <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+        <ul class="nav navbar-nav" hidden>
+          <li class="active"><a href="#">Link <span class="sr-only">(current)</span></a></li> <li><a href="#">Link</a></li> <li class="dropdown"> <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Dropdown <span class="caret"></span></a> <ul class="dropdown-menu"> <li><a href="#">Action</a></li> <li><a href="#">Another action</a></li> <li><a href="#">Something else here</a></li> <li role="separator" class="divider"></li> <li><a href="#">Separated link</a></li> <li role="separator" class="divider"></li> <li><a href="#">One more separated link</a></li> </ul> </li> </ul>
+
+          <form class="navbar-form navbar-left" role="search" hidden> <div class="form-group"> <input type="text" class="form-control" placeholder="Search"> </div> <button type="submit" class="btn btn-default">Submit</button> </form>
+
+          <ul class="nav navbar-nav navbar-right" hidden> <li><a href="#">Link</a></li> <li class="dropdown"> <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Dropdown <span class="caret"></span></a> <ul class="dropdown-menu"> <li><a href="#">Action</a></li> <li><a href="#">Another action</a></li> <li><a href="#">Something else here</a></li> <li role="separator" class="divider"></li> <li><a href="#">Separated link</a></li> </ul> </li>
+        </ul>
+        
+        <!-- WASM status indicator -->
+        <ul class="nav navbar-nav navbar-right">
+          <li><a href="#" id="wasm-status-indicator"><span id="wasm-status-light" class="status-light offline">●</span> <span id="wasm-status-text">AI Engine: Offline</span></a></li>
+        </ul>
+      </div><!-- /.navbar-collapse -->
+    </div><!-- /.container-fluid -->
+  </nav>
+
+  <div class="container">
+    <div class="col-md-6">
+      <div class="panel panel-default">
+        <div class="panel-heading">
+        <h3 class="panel-title">💯💯💯💯💯</h3>
+        </div>
+        <div class="panel-body" style="position:relative; text-align: center;">
+          <button tabIndex="-1" id="piece-send" type="button" class="btn btn-block">Send Next Piece</button>
+          <button id="autoplay" type="button" class="btn btn-block">Autoplay</button>
+          <div><button class="btn " id="undo">Undo</button>
+          <button class="btn " id="redo">Redo</button>
+          <button class="btn " id="reset">Reset</button>
+          </div>
+          <div>
+          <label style="cursor: pointer;"><input type="checkbox" id="stop-controller"/> Stop when solution is found</label>
+          </div>
+          <div>
+          <label style="cursor: pointer;"><input type="checkbox" id="fast-controller"/>Faster</label>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-6">
+      <div class="panel panel-default">
+        <div class="panel-heading">
+          <h3 class="panel-title" id="happy-indicator">🤓</h3>
+        </div>
+        <div class="panel-body" style="position:relative">
+          <div id="hold" style="float:left; margin-left:1em;position:relative;width:6em;height:6em; background-color: black">
+          </div>
+
+          <div id="game-outer" style="float:left;position:relative;width:20em;height:20em;"> <!-- for now, it will be a horizontal well -->
+            <div id="game-inner" h="10" w="10" class="grid">
+            </div>
+          </div>
+
+          <div id="previews" style="float:left; margin-left:1em;position:relative;width:4em;height:20em; background-color: black">
+          </div>
+        </div>
+        <div id="counter" style="padding: 20px; font-size: 14pt;">
+          0
+        </div>
+      </div>
+    </div>
+  </div>
+  <script>
+    // Initialize the WASM module when the page loads
+    document.addEventListener('DOMContentLoaded', function() {
+      loadWasmModule().then(() => {
+        console.log('WASM module loaded successfully');
+      }).catch(error => {
+        console.error('Failed to load WASM module:', error);
+      });
+    });
+  </script>
+</body>
+</html>

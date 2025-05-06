@@ -17,7 +17,7 @@ $ ->
   $board = $('#game-inner')
   $preview = $('#previews')
   $hold = $('#hold')
-  
+
   do makeBoard = ->
     $board.empty()
     [w, h] = getDims($board)
@@ -33,6 +33,51 @@ $ ->
           left: x*cellsize
         })
         $el.appendTo($board)
+
+  # Recalculate board when window resizes or fullscreen changes
+  resizeHandler = ->
+    console.log('Resize detected, recalculating board dimensions')
+
+    # Force recalculation of cell size based on current window dimensions
+    makeBoard()
+    # Re-render the board with the current piece
+    if window.board && window.curPiece && window.renderBoardWithPiece
+      console.log('Re-rendering board with piece')
+      window.renderBoardWithPiece(window.board, window.curPiece)
+
+    # Also update preview and hold if they exist
+    if window.preview && window.renderPreview
+      console.log('Re-rendering preview')
+      window.renderPreview(window.preview)
+    if window.hold && window.renderHold
+      console.log('Re-rendering hold')
+      window.renderHold(window.hold)
+
+  # Make resizeHandler globally accessible
+  window.resizeHandler = resizeHandler
+
+  # Listen for window resize events with 10ms and 60ms delays
+  $(window).on 'resize', ->
+    setTimeout(resizeHandler, 10)
+    setTimeout(resizeHandler, 60)
+
+  # Listen for fullscreen change events across browsers with 10ms and 60ms delays
+  document.addEventListener('fullscreenchange', ->
+    setTimeout(resizeHandler, 10)
+    setTimeout(resizeHandler, 60)
+  )
+  document.addEventListener('webkitfullscreenchange', ->
+    setTimeout(resizeHandler, 10)
+    setTimeout(resizeHandler, 60)
+  )
+  document.addEventListener('mozfullscreenchange', ->
+    setTimeout(resizeHandler, 10)
+    setTimeout(resizeHandler, 60)
+  )
+  document.addEventListener('MSFullscreenChange', ->
+    setTimeout(resizeHandler, 10)
+    setTimeout(resizeHandler, 60)
+  )
 
   renderBoard = (board) ->
     [w, h] = getDims($board)
@@ -54,7 +99,7 @@ $ ->
       , 500)
     window.lastClears = counter.clears
 
-  renderBoardWithPiece = (board, piece) -> 
+  renderBoardWithPiece = (board, piece) ->
     print 'rendering', piece
     renderBoard(board)
     ghostPiece = Piece.hardDrop(piece, board)
@@ -116,7 +161,7 @@ $ ->
     renderBoard(nxtBoard)
     nxtBoard
 
-  randomPieceType = -> 
+  randomPieceType = ->
     print 'random piece, ', rand(7), pieces.length
     print pieces
     pieces[rand(7)]
@@ -176,8 +221,6 @@ $ ->
       if hold
         p = [curPiece.pieceType, hold].concat(preview)
       [w, h] = getDims($board)
-      
-      # Only use WASM for AI move - server no longer exists
       console.log "Using WASM for AI move"
       window.wasmAiMove(board, p, 200, callback)
 

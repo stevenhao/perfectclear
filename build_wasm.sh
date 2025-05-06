@@ -13,9 +13,13 @@ emcc -O3 \
      -s EXPORTED_RUNTIME_METHODS='["ccall", "cwrap", "UTF8ToString", "allocateUTF8"]' \
      -s ALLOW_MEMORY_GROWTH=1 \
      -s MODULARIZE=1 \
-     -s 'EXPORT_NAME="createPerfectClear"'
+     -s 'EXPORT_NAME="createPerfectClear"' \
+     --preload-file pieces@/pieces \
+     --preload-file centers@/centers \
+     --preload-file kicks@/kicks \
+     --preload-file book_100k.txt@/book_100k.txt
 
 mkdir -p public/dist
-cp dist/perfectclear.js dist/perfectclear.wasm public/dist/
+cp dist/perfectclear.js dist/perfectclear.wasm dist/perfectclear.data public/dist/
 
 echo "WebAssembly compilation complete!"

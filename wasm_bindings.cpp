@@ -26,23 +26,55 @@ int toInt(string s) {
 }
 
 board readBoard(json j) {
-  if (j["W"].is_string() && j["H"].is_string() && j["data"].is_string()) {
-    int _W = toInt(j["W"].get<string>());
-    int _H = toInt(j["H"].get<string>());
+  try {
+    int _W, _H;
+    if (j["W"].is_number()) {
+      _W = j["W"].get<int>();
+    } else if (j["W"].is_string()) {
+      _W = toInt(j["W"].get<string>());
+    } else {
+      throw runtime_error("W is neither a number nor a string");
+    }
+    
+    if (j["H"].is_number()) {
+      _H = j["H"].get<int>();
+    } else if (j["H"].is_string()) {
+      _H = toInt(j["H"].get<string>());
+    } else {
+      throw runtime_error("H is neither a number nor a string");
+    }
+    
+    if (!j["data"].is_string()) {
+      throw runtime_error("data is not a string");
+    }
+    
     string s = j["data"].get<string>();
-    if (_W != W || _H != H) throw runtime_error("Board dimensions mismatch");
+    if (_W != W || _H != H) {
+      throw runtime_error("Board dimensions mismatch: expected " + to_string(W) + "x" + to_string(H) + 
+                          ", got " + to_string(_W) + "x" + to_string(_H));
+    }
+    
+    if (s.length() != W * H) {
+      throw runtime_error("Data length mismatch: expected " + to_string(W * H) + 
+                          ", got " + to_string(s.length()));
+    }
+    
     char buf[MAXN][MAXN];
-
     int cnt = 0;
     for (int i = 0; i < H; ++i) {
       for (int j = 0; j < W; ++j) {
-        buf[i][j] = s[cnt];
-        ++cnt;
+        if (cnt < s.length()) {
+          buf[i][j] = s[cnt];
+          ++cnt;
+        } else {
+          buf[i][j] = '0'; // Default to empty if data is too short
+        }
       }
     }
     return board(buf, '0');
-  } else {
-    throw runtime_error("Cannot parse board");
+  } catch (const exception& e) {
+    throw runtime_error(string("Error in readBoard: ") + e.what() + 
+                        ", JSON: " + j.dump());
   }
 }
 
@@ -59,19 +91,87 @@ extern "C" {
     EMSCRIPTEN_KEEPALIVE
     char* wasm_get_best_move(const char* boardJson, const char* piecesJson, int searchBreadth) {
         try {
-            auto j_board = json::parse(boardJson);
-            auto j_pieces = json::parse(piecesJson);
+            json j_board, j_pieces;
+            try {
+                j_board = json::parse(boardJson);
+            } catch (const exception& e) {
+                json error;
+                error["error"] = string("Failed to parse board JSON: ") + e.what();
+                return allocateString(error.dump());
+            }
             
-            board b = readBoard(j_board);
-            vector<int> pieces = readPieces(j_pieces);
+            try {
+                j_pieces = json::parse(piecesJson);
+            } catch (const exception& e) {
+                json error;
+                error["error"] = string("Failed to parse pieces JSON: ") + e.what();
+                return allocateString(error.dump());
+            }
+            
+            board b;
+            vector<int> pieces;
+            
+            try {
+                b = readBoard(j_board);
+            } catch (const exception& e) {
+                json error;
+                error["error"] = string("Failed to read board: ") + e.what();
+                error["board_json"] = boardJson;
+                return allocateString(error.dump());
+            }
+            
+            try {
+                pieces = readPieces(j_pieces);
+                if (pieces.empty()) {
+                    json error;
+                    error["error"] = "Pieces array is empty";
+                    error["pieces_json"] = piecesJson;
+                    return allocateString(error.dump());
+                }
+            } catch (const exception& e) {
+                json error;
+                error["error"] = string("Failed to read pieces: ") + e.what();
+                error["pieces_json"] = piecesJson;
+                return allocateString(error.dump());
+            }
             
             setBeamSearchLimit(searchBreadth);
             
-            engineResult result = getBestMove(b, pieces);
+            engineResult result;
+            try {
+                json debug;
+                debug["board"] = toString(b);
+                debug["pieces"] = pieces;
+                
+                result = getBestMove(b, pieces);
+                
+                if (result.moves.empty()) {
+                    json error;
+                    error["error"] = "No valid moves found";
+                    error["debug"] = debug;
+                    return allocateString(error.dump());
+                }
+            } catch (const exception& e) {
+                json error;
+                error["error"] = string("Failed to get best move: ") + e.what();
+                error["board_str"] = toString(b);
+                error["pieces_count"] = pieces.size();
+                if (!pieces.empty()) {
+                    error["first_piece"] = pieces[0];
+                }
+                return allocateString(error.dump());
+            }
             
             piece initial = piece(pieces[0]);
             
-            vector<int> path = getPath(b, result.moves[0], initial);
+            vector<int> path;
+            try {
+                path = getPath(b, result.moves[0], initial);
+            } catch (const exception& e) {
+                json error;
+                error["error"] = string("Failed to get path: ") + e.what();
+                return allocateString(error.dump());
+            }
             
             vector<string> pathStrings;
             pathStrings.push_back(toString(initial));
@@ -91,7 +191,7 @@ extern "C" {
             return allocateString(j_result.dump());
         } catch (const exception& e) {
             json error;
-            error["error"] = e.what();
+            error["error"] = string("Unexpected error: ") + e.what();
             return allocateString(error.dump());
         }
     }

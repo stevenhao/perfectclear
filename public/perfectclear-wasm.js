@@ -1,14 +1,34 @@
 let wasmModule = null;
 
+async function fetchFile(url) {
+  try {
+    const response = await fetch(url);
+    if (!response.ok) {
+      throw new Error(`Failed to fetch ${url}: ${response.status} ${response.statusText}`);
+    }
+    return await response.text();
+  } catch (error) {
+    console.error(`Error fetching ${url}:`, error);
+    throw error;
+  }
+}
+
 function loadWasmModule() {
   return new Promise((resolve, reject) => {
-    createPerfectClear().then(function(Module) {
+    createPerfectClear().then(async function(Module) {
       wasmModule = Module;
       
-      Module._wasm_init_engine();
-      
-      console.log('PerfectClear WASM module initialized');
-      resolve(Module);
+      try {
+        console.log('Loading data files...');
+        
+        Module._wasm_init_engine();
+        
+        console.log('PerfectClear WASM module initialized');
+        resolve(Module);
+      } catch (error) {
+        console.error('Error during initialization:', error);
+        reject(error);
+      }
     }).catch(error => {
       console.error('Failed to load WASM module:', error);
       reject(error);

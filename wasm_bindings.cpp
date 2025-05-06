@@ -203,6 +203,10 @@ extern "C" {
     }
     
     EMSCRIPTEN_KEEPALIVE
+    void wasm_load_data(const char* piecesData, const char* centersData, const char* kicksData, const char* bookData) {
+    }
+    
+    EMSCRIPTEN_KEEPALIVE
     void wasm_free_string(char* ptr) {
         free(ptr);
     }

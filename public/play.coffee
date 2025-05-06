@@ -37,6 +37,17 @@ $ ->
   # Recalculate board when window resizes or fullscreen changes
   resizeHandler = ->
     console.log('Resize detected, recalculating board dimensions')
+    
+    # Update mobile-top-bar positioning if it exists
+    if window.innerWidth <= 768
+      $('.mobile-top-bar').css({
+        'width': '100%'
+      })
+      
+      # Reposition game container under the top bar
+      $('#game-outer').css({
+        'margin-top': ($('.mobile-top-bar').height() + 20) + 'px'
+      })
 
     # Force recalculation of cell size based on current window dimensions
     makeBoard()
@@ -111,18 +122,39 @@ $ ->
 
   renderPreview = (preview) ->
     [w, h] = [4, 20]
-    cellsize = min [$preview.height() / 20, $preview.width() / 5]
+    # Check if we're on mobile (using screen width as a proxy)
+    isMobile = window.innerWidth <= 800
+    
+    if isMobile
+      # For mobile, use a different cell size calculation optimized for horizontal layout
+      cellsize = min [$preview.height() / 2, $preview.width() / (preview.length * 4 + 2)]
+    else
+      cellsize = min [$preview.height() / 20, $preview.width() / 5]
+      
     mid = $preview.width() / 2
     $preview.empty()
+    
+    console.log("Rendering preview with isMobile:", isMobile, "cellsize:", cellsize, "preview width:", $preview.width(), "preview height:", $preview.height())
+    
     [0..preview.length - 1].forEach (i) ->
       pieceType = preview[i]
       color = getColor(PieceType.getIndex(pieceType))
       PieceType.blocks(pieceType).forEach ([x, y]) ->
         $el = $('<div>').attr('x', x).attr('y', y)
-        cx = mid
-        cy = (2.5 + 4 * i) * cellsize
-        left = cx + x * cellsize - cellsize / 2
-        top = cy - y * cellsize - cellsize / 2
+        
+        if isMobile
+          # Horizontal layout for mobile - pieces side by side
+          cx = (3 + i * 4) * cellsize
+          cy = $preview.height() / 2
+          left = cx + x * cellsize - cellsize / 2
+          top = cy - y * cellsize - cellsize / 2
+        else
+          # Vertical layout for desktop (original)
+          cx = mid
+          cy = (2.5 + 4 * i) * cellsize
+          left = cx + x * cellsize - cellsize / 2
+          top = cy - y * cellsize - cellsize / 2
+          
         $el.addClass('block').addClass('preview').css({
           width: cellsize - 1
           height: cellsize - 1

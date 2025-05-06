@@ -84,15 +84,16 @@
             </div>
             <!-- Fullscreen button moved to bottom right -->
             <div class="panel-body" style="position: relative; height: 100vh; display: flex; justify-content: center; align-items: center; padding: 0;">
-              <div id="hold" style="position: absolute; left: 10px; top: 10px; width: 8vh; height: 8vh; background-color: black">
+              <div class="mobile-top-bar">
+                <div id="hold" style="position: absolute; left: 10px; top: 10px; width: 8vh; height: 8vh; background-color: black">
+                </div>
+                <div id="previews" style="position: absolute; right: 10px; top: 10px; width: 8vh; height: 40vh; background-color: black">
+                </div>
               </div>
 
               <div id="game-outer" style="position: relative; width: 90vh; height: 90vh;" class="responsive-game"> <!-- much bigger game well -->
                 <div id="game-inner" h="10" w="10" class="grid">
                 </div>
-              </div>
-
-              <div id="previews" style="position: absolute; right: 10px; top: 10px; width: 8vh; height: 40vh; background-color: black">
               </div>
               
               <div id="counter" style="position: absolute; right: 20px; top: 50%; transform: translateY(-50%); z-index: 100;" class="counter">

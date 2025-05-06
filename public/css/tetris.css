@@ -1,7 +1,7 @@
 .grid {
   width: 100%;
   height: 100%;
-  background-color: gray;
+  background-color: black;
 }
 
 /* Status indicator styles */
@@ -92,4 +92,49 @@
   min-width: 300px;
   min-height: 300px;
   transition: all 0.3s ease;
+}
+
+/* Mobile responsive styles */
+@media screen and (max-width: 800px) {
+  /* Adjust game container for mobile */
+  #game-outer {
+    width: 100% !important;
+    height: auto !important;
+    max-height: 80vh !important;
+    margin-top: 100px !important; /* Make room for the top bar */
+  }
+  
+  /* Top bar to contain hold and preview pieces */
+  .mobile-top-bar {
+    display: flex !important;
+    justify-content: space-between !important;
+    width: 100% !important;
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    padding: 10px !important;
+    z-index: 100 !important;
+    background-color: black !important;
+    height: 80px !important;
+  }
+  
+  /* Adjust hold and preview containers for mobile */
+  #hold, #previews {
+    position: static !important;
+    display: block !important;
+    width: auto !important;
+  }
+  
+  #hold {
+    width: 20% !important;
+    height: 80px !important;
+    float: left !important;
+  }
+  
+  /* Make previews wider for horizontal display */
+  #previews {
+    width: 75% !important;
+    height: 80px !important;
+    float: right !important;
+  }
 }

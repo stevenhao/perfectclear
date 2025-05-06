@@ -1,9 +1,13 @@
 # Uptime display functionality
+serverConnected = false
+
 updateUptimeDisplay = ->
   $.ajax
     url: '/uptime'
     method: 'GET'
+    timeout: 2000  # Add timeout to detect disconnection faster
     success: (data) ->
+      serverConnected = true
       if data && data.uptime_seconds != undefined
         seconds = data.uptime_seconds
         days = Math.floor(seconds / 86400)
@@ -24,6 +28,7 @@ updateUptimeDisplay = ->
       else
         $('#uptime-value').text('Offline')
     error: ->
+      serverConnected = false
       $('#uptime-value').text('Offline')
 
 # Update uptime display every 5 seconds

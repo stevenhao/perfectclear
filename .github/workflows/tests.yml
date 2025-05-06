@@ -32,6 +32,11 @@ jobs:
     - name: Build project
       run: make
     
+    - name: Build test executables
+      run: |
+        make enginetest
+        make tetristest
+    
     - name: Run enginetest
       run: ./enginetest.o 1
     

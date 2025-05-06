@@ -13,7 +13,7 @@ WORKDIR /app
 COPY . .
 
 # Build the server
-RUN make clean && make server
+RUN make server
 
 FROM ubuntu:22.04
 

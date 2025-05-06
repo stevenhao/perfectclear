@@ -1,0 +1,11 @@
+{
+  "watch": ["src/**/*.ts", "*.cpp", "*.hpp", "*.h"],
+  "ignore": ["node_modules", "dist"],
+  "ext": "ts,cpp,hpp,h",
+  "execMap": {
+    "ts": "ts-node"
+  },
+  "events": {
+    "restart": "make"
+  }
+}

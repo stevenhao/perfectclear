@@ -7,6 +7,7 @@
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <unistd.h>
+#include <fcntl.h>
 
 #include "json.hpp"
 #include "engine.cpp"
@@ -120,57 +121,84 @@ string handleRequest(string input) {
 int main(int argc, char *argv[]) {
   loadData();
   loadBook();
-  /*  stringstream ss;
-      ss << cin.rdbuf();
-      string ans = handleRequest(ss.str());
-      cout << ans << "\n";*/
 
-  int sockfd, newsockfd, portno;
-  socklen_t clilen;
-  char buffer[256];
-  struct sockaddr_in serv_addr, cli_addr;
-  int n;
-  if (argc < 2) {
-    fprintf(stderr, "ERROR, no port provided\n");
+  bool usePipe = false;
+  if (argc >= 2 && string(argv[1]) == "pipe") {
+    usePipe = true;
+  } else if (argc < 2) {
+    fprintf(stderr, "ERROR, no port provided or pipe option\n");
     exit(1);
   }
-  sockfd = socket(AF_INET, SOCK_STREAM, 0);
-  if (sockfd < 0) error("ERROR opening socket");
-  bzero((char *)&serv_addr, sizeof(serv_addr));
-  portno = atoi(argv[1]);
-  if (argc >= 3) {
-    loadBook();
-  }
-  serv_addr.sin_family = AF_INET;
-  serv_addr.sin_addr.s_addr = INADDR_ANY;
-  serv_addr.sin_port = htons(portno);
-  if (::bind(sockfd, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0)
-    error("ERROR on binding");
-  listen(sockfd, 5);
-  clilen = sizeof(cli_addr);
-  while (true) {
-    newsockfd = accept(sockfd, (struct sockaddr *)&cli_addr, &clilen);
-    if (newsockfd < 0) error("ERROR on accept");
+
+  if (usePipe) {
+    const char* pipePath = "/tmp/perfectclear_pipe";
+    int pipefd;
+    
+    pipefd = open(pipePath, O_WRONLY);
+    if (pipefd < 0) {
+      error("ERROR opening pipe for writing");
+    }
+    
+    char buffer[4096];
     while (true) {
-      bzero(buffer, 256);
-      n = read(newsockfd, buffer, 255);
-      if (n < 0) {
-        cerr << "ERROR reading from socket\n";
+      bzero(buffer, 4096);
+      if (!fgets(buffer, 4095, stdin)) {
         break;
       }
+      
       string res = handleRequest(string(buffer));
       if (res.size()) {
-        n = write(newsockfd, res.c_str(), res.size());
-      } else {
-        break;
-      }
-      if (n < 0) {
-        cerr << "ERROR writing to socket\n";
-        break;
+        write(pipefd, (res + "\n").c_str(), res.size() + 1);
       }
     }
-    close(newsockfd);
+    close(pipefd);
+  } else {
+    int sockfd, newsockfd, portno;
+    socklen_t clilen;
+    char buffer[256];
+    struct sockaddr_in serv_addr, cli_addr;
+    int n;
+    
+    portno = atoi(argv[1]);
+    if (argc >= 3) {
+      loadBook();
+    }
+    
+    sockfd = socket(AF_INET, SOCK_STREAM, 0);
+    if (sockfd < 0) error("ERROR opening socket");
+    bzero((char *)&serv_addr, sizeof(serv_addr));
+    
+    serv_addr.sin_family = AF_INET;
+    serv_addr.sin_addr.s_addr = INADDR_ANY;
+    serv_addr.sin_port = htons(portno);
+    if (::bind(sockfd, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0)
+      error("ERROR on binding");
+    listen(sockfd, 5);
+    clilen = sizeof(cli_addr);
+    while (true) {
+      newsockfd = accept(sockfd, (struct sockaddr *)&cli_addr, &clilen);
+      if (newsockfd < 0) error("ERROR on accept");
+      while (true) {
+        bzero(buffer, 256);
+        n = read(newsockfd, buffer, 255);
+        if (n < 0) {
+          cerr << "ERROR reading from socket\n";
+          break;
+        }
+        string res = handleRequest(string(buffer));
+        if (res.size()) {
+          n = write(newsockfd, res.c_str(), res.size());
+        } else {
+          break;
+        }
+        if (n < 0) {
+          cerr << "ERROR writing to socket\n";
+          break;
+        }
+      }
+      close(newsockfd);
+    }
+    close(sockfd);
   }
-  close(sockfd);
   return 0;
 }

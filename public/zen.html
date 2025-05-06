@@ -124,9 +124,20 @@
       // Set a flag to identify zen mode
       window.zenMode = true;
       
-      // Initialize the WASM module
+      // Initialize the WASM module and defer game initialization
       loadWasmModule().then(() => {
         console.log('WASM module loaded successfully in zen mode');
+        
+        // The autoplay will be started automatically by updateWasmStatus
+        // when it transitions from loading to online state
+        
+        // Initialize the game state if needed
+        if (!window.board) {
+          console.log('Deferring game initialization until after WASM loads');
+          
+          // Game initialization will be handled by autoplayStep
+          // when it's called by updateWasmStatus
+        }
       }).catch(error => {
         console.error('Failed to load WASM module in zen mode:', error);
       });

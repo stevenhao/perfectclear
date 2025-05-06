@@ -206,9 +206,17 @@ $ ->
       if hold
         p = [curPiece.pieceType, hold].concat(preview)
       [w, h] = getDims($board)
-      msg = { board: {W: w, H: h, data: Board.encode(board)}, pieces: p }
-      console.log msg
-      $.post "/ai", msg, callback
+      
+      # Check if WASM module is available
+      if window.wasmAiMove?
+        console.log "Using WASM for AI move"
+        window.wasmAiMove(board, p, 200, callback)
+      else
+        # Fallback to server API
+        console.log "Falling back to server API for AI move"
+        msg = { board: {W: w, H: h, data: Board.encode(board)}, pieces: p, search_breadth: 200 }
+        console.log msg
+        $.post "/ai", msg, callback
 
     nextPiece = ->
       ret = Piece.create(bag.shift(), board)

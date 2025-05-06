@@ -1,6 +1,21 @@
 <html>
 <head>
   <!-- Latest compiled and minified JavaScript -->
+  <!-- Load WASM module -->
+  <script>
+    // Configure Module for Emscripten before loading the WASM module
+    var Module = {
+      locateFile: function(path) {
+        if (path.endsWith('.wasm')) return 'dist/' + path;
+        if (path.endsWith('.data')) return 'dist/' + path;
+        return path;
+      }
+    };
+  </script>
+  <script src="dist/perfectclear.js"></script>
+  <script src="perfectclear-wasm.js"></script>
+  
+  <!-- Original scripts -->
   <script type="text/coffeescript" src="steven.coffee"></script>
   <script type="text/coffeescript" src="tetris.coffee"></script>
   <script type="text/coffeescript" src="play.coffee"></script>
@@ -77,5 +92,15 @@
       </div>
     </div>
   </div>
+  <script>
+    // Initialize the WASM module when the page loads
+    document.addEventListener('DOMContentLoaded', function() {
+      loadWasmModule().then(() => {
+        console.log('WASM module loaded successfully');
+      }).catch(error => {
+        console.error('Failed to load WASM module:', error);
+      });
+    });
+  </script>
 </body>
 </html>

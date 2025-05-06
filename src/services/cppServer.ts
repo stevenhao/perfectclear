@@ -11,6 +11,8 @@ export class CppServerService {
   private lastConnectionTime: number = 0;
   private requestCallbacks: Map<number, (response: any) => void> = new Map();
   private reqId: number = 0;
+  private readStream: fs.ReadStream | null = null;
+  private restartTimer: NodeJS.Timeout | null = null;
 
   constructor() {
     this.ensurePipeExists();
@@ -37,10 +39,10 @@ export class CppServerService {
       this.isConnected = true;
       this.lastConnectionTime = Date.now();
 
-      const readStream = fs.createReadStream(PIPE_PATH);
+      this.readStream = fs.createReadStream(PIPE_PATH);
       let buffer = '';
 
-      readStream.on('data', (data) => {
+      this.readStream.on('data', (data) => {
         buffer += data.toString();
         
         let endIndex;
@@ -61,7 +63,7 @@ export class CppServerService {
         }
       });
 
-      readStream.on('error', (err) => {
+      this.readStream.on('error', (err) => {
         console.error('Error reading from pipe:', err);
         this.isConnected = false;
         this.restart();
@@ -88,12 +90,17 @@ export class CppServerService {
     if (this.serverProcess) {
       try {
         this.serverProcess.kill();
+        this.serverProcess = null;
       } catch (err) {
         console.error('Error killing C++ server process:', err);
       }
     }
     
-    setTimeout(() => this.start(), 5000);
+    if (this.restartTimer) {
+      clearTimeout(this.restartTimer);
+    }
+    
+    this.restartTimer = setTimeout(() => this.start(), 5000);
   }
 
   public getStatus(): { connected: boolean; uptime: number } {
@@ -130,11 +137,25 @@ export class CppServerService {
   }
 
   public stop(): void {
+    if (this.restartTimer) {
+      clearTimeout(this.restartTimer);
+      this.restartTimer = null;
+    }
+    
+    if (this.readStream) {
+      this.readStream.removeAllListeners();
+      this.readStream.destroy();
+      this.readStream = null;
+    }
+    
     if (this.serverProcess) {
+      this.serverProcess.removeAllListeners();
       this.serverProcess.kill();
       this.serverProcess = null;
     }
+    
     this.isConnected = false;
+    this.requestCallbacks.clear();
   }
 }
 

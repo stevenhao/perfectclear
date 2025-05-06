@@ -1,0 +1,44 @@
+name: Tests
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Install C++ dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y g++-9
+      
+    - name: Set up Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '16'
+        cache: 'yarn'
+    
+    - name: Install Node.js dependencies
+      run: |
+        npm install -g coffeescript
+        yarn
+    
+    - name: Build project
+      run: make
+    
+    - name: Build test executables
+      run: |
+        make enginetest
+        make tetristest
+    
+    - name: Run enginetest
+      run: ./enginetest.o 1
+    
+    - name: Run tetristest
+      run: ./tetristest.o

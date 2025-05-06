@@ -1,0 +1,31 @@
+name: TypeScript Tests
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  typescript-test:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Set up Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '16'
+        cache: 'yarn'
+    
+    - name: Install dependencies
+      run: yarn
+    
+    - name: Build TypeScript
+      run: yarn build
+    
+    - name: Run Jest tests
+      run: yarn test --detectOpenHandles --forceExit
+      env:
+        CI: true

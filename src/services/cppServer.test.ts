@@ -6,6 +6,7 @@ jest.mock('child_process', () => ({
   spawn: jest.fn().mockReturnValue({
     on: jest.fn(),
     kill: jest.fn(),
+    removeAllListeners: jest.fn(),
     stdin: { write: jest.fn() }
   }),
   execSync: jest.fn()
@@ -14,7 +15,9 @@ jest.mock('child_process', () => ({
 jest.mock('fs', () => ({
   existsSync: jest.fn(),
   createReadStream: jest.fn().mockReturnValue({
-    on: jest.fn()
+    on: jest.fn(),
+    removeAllListeners: jest.fn(),
+    destroy: jest.fn()
   })
 }));
 
@@ -25,6 +28,11 @@ describe('CppServerService', () => {
     jest.clearAllMocks();
     (fs.existsSync as jest.Mock).mockReturnValue(true);
     service = new CppServerService();
+  });
+  
+  afterEach(() => {
+    service.stop();
+    jest.clearAllTimers();
   });
   
   test('should start C++ server process with pipe argument', () => {
@@ -44,6 +52,7 @@ describe('CppServerService', () => {
     (spawn as jest.Mock).mockReturnValueOnce({
       on: mockOn,
       kill: jest.fn(),
+      removeAllListeners: jest.fn(),
       stdin: { write: jest.fn() }
     });
     
@@ -54,5 +63,18 @@ describe('CppServerService', () => {
       errorCallback(new Error('Test error'));
       expect(service.getStatus().connected).toBe(false);
     }
+  });
+  
+  test('should properly clean up resources when stopped', () => {
+    service.start();
+    service.stop();
+    
+    const mockReadStream = fs.createReadStream('');
+    const mockServerProcess = spawn('', []);
+    
+    expect(mockReadStream.removeAllListeners).toHaveBeenCalled();
+    expect(mockReadStream.destroy).toHaveBeenCalled();
+    expect(mockServerProcess.removeAllListeners).toHaveBeenCalled();
+    expect(mockServerProcess.kill).toHaveBeenCalled();
   });
 });

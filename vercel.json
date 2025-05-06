@@ -3,20 +3,26 @@
   "builds": [
     { "src": "public/**", "use": "@vercel/static" }
   ],
-  "routes": [
-    { 
-      "src": "/(.*\\.wasm)",
-      "dest": "/public/$1",
-      "headers": { "content-type": "application/wasm" }
-    },
-    { 
-      "src": "/(.*\\.data)",
-      "dest": "/public/$1",
-      "headers": { "content-type": "application/octet-stream" }
-    },
-    { "src": "/(.*)", "dest": "/public/$1" }
+  "rewrites": [
+    { "source": "/(.*)", "destination": "/public/$1" }
   ],
   "headers": [
+    {
+      "source": "/(.*\\.wasm)",
+      "headers": [
+        { "key": "Content-Type", "value": "application/wasm" },
+        { "key": "Cross-Origin-Opener-Policy", "value": "same-origin" },
+        { "key": "Cross-Origin-Embedder-Policy", "value": "require-corp" }
+      ]
+    },
+    {
+      "source": "/(.*\\.data)",
+      "headers": [
+        { "key": "Content-Type", "value": "application/octet-stream" },
+        { "key": "Cross-Origin-Opener-Policy", "value": "same-origin" },
+        { "key": "Cross-Origin-Embedder-Policy", "value": "require-corp" }
+      ]
+    },
     {
       "source": "/(.*)",
       "headers": [

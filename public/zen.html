@@ -1,0 +1,124 @@
+<html>
+<head>
+  <!-- Latest compiled and minified JavaScript -->
+  <script type="text/coffeescript" src="steven.coffee"></script>
+  <script type="text/coffeescript" src="tetris.coffee"></script>
+  <script type="text/coffeescript" src="play.coffee"></script>
+  <script type="text/javascript" src="coffee-script.js"></script>
+  <script src="jquery.min.js"></script>
+  <link rel="stylesheet" href="css/bootstrap.min.css">
+  <link rel="stylesheet" href="css/tetris.css">
+  <style>
+    body {
+      background-color: #121212;
+      color: #e0e0e0;
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+    }
+    .zen-mode {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+    }
+    .panel {
+      background-color: #1e1e1e;
+      border: 1px solid #333;
+    }
+    .panel-default>.panel-heading {
+      background-color: #2d2d2d;
+      color: #e0e0e0;
+      border-color: #333;
+    }
+    .score-animation {
+      animation: pulse 0.5s ease-in-out;
+    }
+    @keyframes pulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.2); }
+      100% { transform: scale(1); }
+    }
+  </style>
+</head>
+<body class="zen-mode-body">
+  <div class="zen-mode">
+    <div class="container-fluid">
+      <div class="row">
+        <div class="col-md-6">
+          <div class="panel panel-default">
+            <div class="panel-heading">
+            <h3 class="panel-title">💯💯💯💯💯</h3>
+            </div>
+            <div class="panel-body" style="position:relative; text-align: center;">
+              <!-- "Send Next Piece" button removed -->
+              <button id="autoplay" type="button" class="btn btn-block">Pause</button>
+              <div>
+                <button class="btn " id="undo">Undo</button>
+                <button class="btn " id="redo">Redo</button>
+                <button class="btn " id="reset">Reset</button>
+              </div>
+              <div>
+                <label style="cursor: pointer;"><input type="checkbox" id="stop-controller"/> Stop when solution is found</label>
+              </div>
+              <div>
+                <label style="cursor: pointer;"><input type="checkbox" id="fast-controller"/>Faster</label>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="panel panel-default">
+            <div class="panel-heading">
+              <h3 class="panel-title" id="happy-indicator">🤓</h3>
+            </div>
+            <div class="panel-body" style="position:relative">
+              <div id="hold" style="float:left; margin-left:1em;position:relative;width:6em;height:6em; background-color: black">
+              </div>
+
+              <div id="game-outer" style="float:left;position:relative;width:20em;height:20em;"> <!-- for now, it will be a horizontal well -->
+                <div id="game-inner" h="10" w="10" class="grid">
+                </div>
+              </div>
+
+              <div id="previews" style="float:left; margin-left:1em;position:relative;width:4em;height:20em; background-color: black">
+              </div>
+            </div>
+            <div id="counter" style="padding: 20px; font-size: 14pt;" class="counter">
+              0
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Wait for document to be fully loaded
+    $(document).ready(function() {
+      // Set a flag to identify zen mode
+      window.zenMode = true;
+      
+      // Start autoplay automatically
+      setTimeout(function() {
+        if (!window.autoplaying) {
+          $('#autoplay').click();
+        }
+      }, 1000);
+
+      // Handle arrow key interactions to pause AI
+      $(document).on('keydown', function(e) {
+        const arrowKeys = ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'];
+        if (arrowKeys.includes(e.key) && window.autoplaying) {
+          $('#autoplay').click(); // Pause the AI
+        }
+      });
+    });
+  </script>
+</body>
+</html>

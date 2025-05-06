@@ -17,3 +17,19 @@
 .status-light.offline {
   color: #e74c3c; /* Red */
 }
+
+/* Zen Mode Styles */
+.zen-mode-body {
+  background-color: #121212;
+  color: #e0e0e0;
+}
+
+.score-animate {
+  animation: score-pulse 0.5s ease-in-out;
+}
+
+@keyframes score-pulse {
+  0% { transform: scale(1); color: #fff; }
+  50% { transform: scale(1.2); color: #ffd700; }
+  100% { transform: scale(1); color: #fff; }
+}

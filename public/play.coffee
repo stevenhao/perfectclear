@@ -75,6 +75,13 @@ $ ->
     print 'counter', counter.clears, counter.pieces
     $counter = $('#counter')
     $counter.text(counter.clears + '/' + counter.pieces)
+    # Add animation on counter update if it's a perfect clear and in zen mode
+    if window.zenMode? and window.lastClears? and counter.clears > window.lastClears
+      $counter.addClass('score-animate')
+      setTimeout(->
+        $counter.removeClass('score-animate')
+      , 500)
+    window.lastClears = counter.clears
 
   renderBoardWithPiece = (board, piece) -> 
     print 'rendering', piece
@@ -338,6 +345,7 @@ $ ->
       faster = !!e.target.checked
     )
     autoplaying = false
+    window.autoplaying = false  # Make autoplaying accessible globally
     autoplayStep = () ->
       aiMove (data) ->
         if $('#happy-indicator').text() != '🐻'
@@ -403,9 +411,11 @@ $ ->
       if autoplaying
         $('#autoplay').text('Autoplay')
         autoplaying = false
+        window.autoplaying = false
       else
         $('#autoplay').text('Pause')
         autoplaying = true
+        window.autoplaying = true
         autoplayStep()
 
     $('#piece-send').click (evt) ->

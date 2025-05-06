@@ -33,6 +33,12 @@ $ ->
           left: x*cellsize
         })
         $el.appendTo($board)
+        
+  # Recalculate board when window resizes
+  $(window).on 'resize', ->
+    makeBoard()
+    if window.board && window.curPiece
+      renderBoardWithPiece(window.board, window.curPiece)
 
   renderBoard = (board) ->
     [w, h] = getDims($board)

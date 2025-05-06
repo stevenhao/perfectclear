@@ -1,6 +1,5 @@
 <html>
 <head>
-  <!-- Latest compiled and minified JavaScript -->
   <!-- Load WASM module -->
   <script>
     // Configure Module for Emscripten before loading the WASM module
@@ -15,7 +14,7 @@
   <script src="dist/perfectclear.js"></script>
   <script src="perfectclear-wasm.js"></script>
   
-  <!-- Original scripts -->
+  <!-- Latest compiled and minified JavaScript -->
   <script type="text/coffeescript" src="steven.coffee"></script>
   <script type="text/coffeescript" src="tetris.coffee"></script>
   <script type="text/coffeescript" src="play.coffee"></script>
@@ -23,83 +22,199 @@
   <script src="jquery.min.js"></script>
   <link rel="stylesheet" href="css/bootstrap.min.css">
   <link rel="stylesheet" href="css/tetris.css">
+  <style>
+    body {
+      background-color: #121212;
+      color: #e0e0e0;
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+    }
+    .zen-mode {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+    }
+    /* Maximize game well size */
+    #game-outer {
+      width: 80vh !important;
+      height: 80vh !important;
+      margin: 0 auto;
+    }
+    .panel {
+      background-color: #1e1e1e;
+      border: 1px solid #333;
+    }
+    .panel-default>.panel-heading {
+      background-color: #2d2d2d;
+      color: #e0e0e0;
+      border-color: #333;
+    }
+    .score-animation {
+      animation: pulse 0.5s ease-in-out;
+    }
+    @keyframes pulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.2); }
+      100% { transform: scale(1); }
+    }
+  </style>
 </head>
-<body>
-  <nav class="navbar navbar-default">
-    <div class="container-fluid">
-      <!-- Brand and toggle get grouped for better mobile display -->
-      <div class="navbar-header"> <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1" aria-expanded="false"> <span class="sr-only">Toggle navigation</span> <span class="icon-bar"></span> <span class="icon-bar"></span> <span class="icon-bar"></span> </button> <a class="navbar-brand" href="#">Bbbb</a> </div>
-      <!-- Collect the nav links, forms, and other content for toggling -->
-      <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
-        <ul class="nav navbar-nav" hidden>
-          <li class="active"><a href="#">Link <span class="sr-only">(current)</span></a></li> <li><a href="#">Link</a></li> <li class="dropdown"> <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Dropdown <span class="caret"></span></a> <ul class="dropdown-menu"> <li><a href="#">Action</a></li> <li><a href="#">Another action</a></li> <li><a href="#">Something else here</a></li> <li role="separator" class="divider"></li> <li><a href="#">Separated link</a></li> <li role="separator" class="divider"></li> <li><a href="#">One more separated link</a></li> </ul> </li> </ul>
+<body class="zen-mode-body">
+  <div class="zen-mode">
+    <div class="container-fluid" style="width: 100%; height: 100%;">
+      <div class="row" style="height: 100%;">
+        <div class="col-md-12">
+          <div class="panel panel-default" style="height: 100vh; border: none; border-radius: 0; margin-bottom: 0; background-color: #121212;">
+            <div style="position: absolute; left: 20px; top: 50%; transform: translateY(-50%); z-index: 100;">
+              <button id="autoplay" type="button" class="btn btn-sm" style="width: 60px; height: 60px; border-radius: 50%; padding: 0; background-color: rgba(255,255,255,0.2); border: none; box-shadow: 0 0 10px rgba(0,0,0,0.5); display: flex; justify-content: center; align-items: center;">
+                <svg id="play-icon" xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="white" viewBox="0 0 16 16" style="display: block;">
+                  <path d="M11.596 8.697l-6.363 3.692c-.54.313-1.233-.066-1.233-.697V4.308c0-.63.692-1.01 1.233-.696l6.363 3.692a.802.802 0 0 1 0 1.393z"/>
+                </svg>
+                <svg id="pause-icon" xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="white" viewBox="0 0 16 16" style="display: none;">
+                  <path d="M5.5 3.5A1.5 1.5 0 0 1 7 5v6a1.5 1.5 0 0 1-3 0V5a1.5 1.5 0 0 1 1.5-1.5zm5 0A1.5 1.5 0 0 1 12 5v6a1.5 1.5 0 0 1-3 0V5a1.5 1.5 0 0 1 1.5-1.5z"/>
+                </svg>
+              </button>
+            </div>
+            <!-- Add fullscreen button -->
+            <div style="position: absolute; right: 20px; top: 20px; z-index: 100;">
+              <button id="fullscreen-btn" type="button" class="btn btn-sm" style="width: 60px; height: 60px; border-radius: 50%; padding: 0; background-color: rgba(255,255,255,0.2); border: none; box-shadow: 0 0 10px rgba(0,0,0,0.5); display: flex; justify-content: center; align-items: center;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="white" viewBox="0 0 16 16">
+                  <path d="M1.5 1a.5.5 0 0 0-.5.5v4a.5.5 0 0 1-1 0v-4A1.5 1.5 0 0 1 1.5 0h4a.5.5 0 0 1 0 1h-4zM10 .5a.5.5 0 0 1 .5-.5h4A1.5 1.5 0 0 1 16 1.5v4a.5.5 0 0 1-1 0v-4a.5.5 0 0 0-.5-.5h-4a.5.5 0 0 1-.5-.5zM.5 10a.5.5 0 0 1 .5.5v4a.5.5 0 0 0 .5.5h4a.5.5 0 0 1 0 1h-4A1.5 1.5 0 0 1 0 14.5v-4a.5.5 0 0 1 .5-.5zm15 0a.5.5 0 0 1 .5.5v4a1.5 1.5 0 0 1-1.5 1.5h-4a.5.5 0 0 1 0-1h4a.5.5 0 0 0 .5-.5v-4a.5.5 0 0 1 .5-.5z"/>
+                </svg>
+              </button>
+            </div>
+            <div class="panel-body" style="position: relative; height: 100vh; display: flex; justify-content: center; align-items: center; padding: 0;">
+              <div id="hold" style="position: absolute; left: 10px; top: 10px; width: 8vh; height: 8vh; background-color: black">
+              </div>
 
-          <form class="navbar-form navbar-left" role="search" hidden> <div class="form-group"> <input type="text" class="form-control" placeholder="Search"> </div> <button type="submit" class="btn btn-default">Submit</button> </form>
+              <div id="game-outer" style="position: relative; width: 90vh; height: 90vh;" class="responsive-game"> <!-- much bigger game well -->
+                <div id="game-inner" h="10" w="10" class="grid">
+                </div>
+              </div>
 
-          <ul class="nav navbar-nav navbar-right" hidden> <li><a href="#">Link</a></li> <li class="dropdown"> <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Dropdown <span class="caret"></span></a> <ul class="dropdown-menu"> <li><a href="#">Action</a></li> <li><a href="#">Another action</a></li> <li><a href="#">Something else here</a></li> <li role="separator" class="divider"></li> <li><a href="#">Separated link</a></li> </ul> </li>
-        </ul>
-        
-        <!-- WASM status indicator -->
-        <ul class="nav navbar-nav navbar-right">
-          <li><a href="#" id="wasm-status-indicator"><span id="wasm-status-light" class="status-light offline">●</span> <span id="wasm-status-text">AI Engine: Offline</span></a></li>
-        </ul>
-      </div><!-- /.navbar-collapse -->
-    </div><!-- /.container-fluid -->
-  </nav>
-
-  <div class="container">
-    <div class="col-md-6">
-      <div class="panel panel-default">
-        <div class="panel-heading">
-        <h3 class="panel-title">💯💯💯💯💯</h3>
-        </div>
-        <div class="panel-body" style="position:relative; text-align: center;">
-          <button tabIndex="-1" id="piece-send" type="button" class="btn btn-block">Send Next Piece</button>
-          <button id="autoplay" type="button" class="btn btn-block">Autoplay</button>
-          <div><button class="btn " id="undo">Undo</button>
-          <button class="btn " id="redo">Redo</button>
-          <button class="btn " id="reset">Reset</button>
-          </div>
-          <div>
-          <label style="cursor: pointer;"><input type="checkbox" id="stop-controller"/> Stop when solution is found</label>
-          </div>
-          <div>
-          <label style="cursor: pointer;"><input type="checkbox" id="fast-controller"/>Faster</label>
-          </div>
-        </div>
-      </div>
-    </div>
-    <div class="col-md-6">
-      <div class="panel panel-default">
-        <div class="panel-heading">
-          <h3 class="panel-title" id="happy-indicator">🤓</h3>
-        </div>
-        <div class="panel-body" style="position:relative">
-          <div id="hold" style="float:left; margin-left:1em;position:relative;width:6em;height:6em; background-color: black">
-          </div>
-
-          <div id="game-outer" style="float:left;position:relative;width:20em;height:20em;"> <!-- for now, it will be a horizontal well -->
-            <div id="game-inner" h="10" w="10" class="grid">
+              <div id="previews" style="position: absolute; right: 10px; top: 10px; width: 8vh; height: 40vh; background-color: black">
+              </div>
+              
+              <div id="counter" style="position: absolute; right: 20px; top: 50%; transform: translateY(-50%); z-index: 100;" class="counter">
+                <div style="width: 60px; height: 60px; border-radius: 50%; background-color: rgba(255,255,255,0.2); display: flex; justify-content: center; align-items: center; box-shadow: 0 0 10px rgba(0,0,0,0.5);">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="white" viewBox="0 0 16 16">
+                    <path d="M2.5.5A.5.5 0 0 1 3 0h10a.5.5 0 0 1 .5.5c0 .538-.012 1.05-.034 1.536a3 3 0 1 1-1.133 5.89c-.79 1.865-1.878 2.777-2.833 3.011v2.173l1.425.356c.194.048.377.135.537.255L13.3 15.1a.5.5 0 0 1-.3.9H3a.5.5 0 0 1-.3-.9l1.838-1.379c.16-.12.343-.207.537-.255L6.5 13.11v-2.173c-.955-.234-2.043-1.146-2.833-3.012a3 3 0 1 1-1.132-5.89A33.076 33.076 0 0 1 2.5.5zm.099 2.54a2 2 0 0 0 .72 3.935c-.333-1.05-.588-2.346-.72-3.935zm10.083 3.935a2 2 0 0 0 .72-3.935c-.133 1.59-.388 2.885-.72 3.935z"/>
+                  </svg>
+                </div>
+              </div>
+              
+              <!-- WASM status indicator -->
+              <div style="position: absolute; left: 20px; bottom: 20px; z-index: 100;">
+                <div id="status-container" class="status-container collapsed">
+                  <span id="wasm-status-light" class="status-light offline" style="font-size: 16px; margin-right: 8px;">●</span>
+                  <span id="wasm-status-text" class="status-text" style="color: white; font-size: 14px;">AI Engine: Offline</span>
+                </div>
+              </div>
+              
+              <!-- Removed all other buttons and controls -->
             </div>
           </div>
-
-          <div id="previews" style="float:left; margin-left:1em;position:relative;width:4em;height:20em; background-color: black">
-          </div>
-        </div>
-        <div id="counter" style="padding: 20px; font-size: 14pt;">
-          0
         </div>
       </div>
     </div>
   </div>
+
   <script>
-    // Initialize the WASM module when the page loads
-    document.addEventListener('DOMContentLoaded', function() {
+    // Wait for document to be fully loaded
+    $(document).ready(function() {
+      // Set a flag to identify zen mode
+      window.zenMode = true;
+      
+      // Initialize the WASM module and defer game initialization
       loadWasmModule().then(() => {
-        console.log('WASM module loaded successfully');
+        console.log('WASM module loaded successfully in zen mode');
+        
+        // The autoplay will be started automatically by updateWasmStatus
+        // when it transitions from loading to online state
+        
+        // Initialize the game state if needed
+        if (!window.board) {
+          console.log('Deferring game initialization until after WASM loads');
+          
+          // Game initialization will be handled by autoplayStep
+          // when it's called by updateWasmStatus
+        }
       }).catch(error => {
-        console.error('Failed to load WASM module:', error);
+        console.error('Failed to load WASM module in zen mode:', error);
       });
+      
+      // Override the autoplay click handler to toggle icons
+      $('#autoplay').off('click').on('click', function() {
+        if (window.autoplaying) {
+          $('#pause-icon').hide();
+          $('#play-icon').show();
+          window.autoplaying = false;
+        } else {
+          $('#play-icon').hide();
+          $('#pause-icon').show();
+          window.autoplaying = true;
+          window.autoplayStep();
+        }
+      });
+      
+      // Start autoplay automatically
+      setTimeout(function() {
+        if (!window.autoplaying) {
+          $('#autoplay').click();
+        }
+      }, 1000);
+
+      // Toggle status indicator on click
+      $('#status-container').on('click', function() {
+        $(this).toggleClass('collapsed');
+      });
+
+      // Handle keyboard interactions to pause AI
+      $(document).on('keydown', function(e) {
+        if (window.autoplaying) {
+          $('#autoplay').click(); // Pause the AI
+        }
+      });
+      
+      // Fullscreen functionality
+      $('#fullscreen-btn').on('click', function() {
+        toggleFullScreen();
+      });
+      
+      function toggleFullScreen() {
+        if (!document.fullscreenElement &&    // Standard Property
+            !document.mozFullScreenElement && // Firefox
+            !document.webkitFullscreenElement && // Chrome, Safari and Opera
+            !document.msFullscreenElement) {  // IE/Edge
+          
+          if (document.documentElement.requestFullscreen) {
+            document.documentElement.requestFullscreen();
+          } else if (document.documentElement.mozRequestFullScreen) {
+            document.documentElement.mozRequestFullScreen();
+          } else if (document.documentElement.webkitRequestFullscreen) {
+            document.documentElement.webkitRequestFullscreen();
+          } else if (document.documentElement.msRequestFullscreen) {
+            document.documentElement.msRequestFullscreen();
+          }
+        } else {
+          if (document.exitFullscreen) {
+            document.exitFullscreen();
+          } else if (document.mozCancelFullScreen) {
+            document.mozCancelFullScreen();
+          } else if (document.webkitExitFullscreen) {
+            document.webkitExitFullscreen();
+          } else if (document.msExitFullscreen) {
+            document.msExitFullscreen();
+          }
+        }
+      }
     });
   </script>
 </body>

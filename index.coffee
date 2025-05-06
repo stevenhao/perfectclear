@@ -22,6 +22,9 @@ app.get '/', (req, res) ->
 
 app.get '/zen', (req, res) ->
   res.sendFile(__dirname + '/public/zen.html')
+  
+app.get '/debug', (req, res) ->
+  res.sendFile(__dirname + '/public/debug.html')
 
 # General route handler for any HTML file without the .html extension
 fs = require('fs')

@@ -44,11 +44,52 @@
 }
 
 .score-animate {
-  animation: score-pulse 0.5s ease-in-out;
+  animation: score-pulse 0.8s ease-in-out;
 }
 
 @keyframes score-pulse {
-  0% { transform: scale(1); color: #fff; }
-  50% { transform: scale(1.2); color: #ffd700; }
-  100% { transform: scale(1); color: #fff; }
+  0% { transform: scale(1); color: #fff; text-shadow: none; }
+  25% { transform: scale(1.3); color: #ffd700; text-shadow: 0 0 10px #ffd700; }
+  50% { transform: scale(1.2); color: #fff; text-shadow: 0 0 15px #ffd700; }
+  75% { transform: scale(1.3); color: #ffd700; text-shadow: 0 0 10px #ffd700; }
+  100% { transform: scale(1); color: #fff; text-shadow: none; }
+}
+
+/* Status indicator styles */
+.status-container {
+  display: flex;
+  align-items: center;
+  background-color: rgba(0,0,0,0.5);
+  padding: 8px 12px;
+  border-radius: 20px;
+  box-shadow: 0 0 10px rgba(0,0,0,0.5);
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.status-container.collapsed {
+  padding: 8px;
+  border-radius: 50%;
+}
+
+.status-text {
+  transition: all 0.3s ease;
+  opacity: 1;
+  max-width: 200px;
+  white-space: nowrap;
+}
+
+.status-container.collapsed .status-text {
+  opacity: 0;
+  max-width: 0;
+  margin-left: 0;
+}
+
+/* Responsive game well */
+.responsive-game {
+  width: 100%;
+  height: 100%;
+  min-width: 300px;
+  min-height: 300px;
+  transition: all 0.3s ease;
 }

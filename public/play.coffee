@@ -17,7 +17,7 @@ $ ->
   $board = $('#game-inner')
   $preview = $('#previews')
   $hold = $('#hold')
-  
+
   do makeBoard = ->
     $board.empty()
     [w, h] = getDims($board)
@@ -33,30 +33,18 @@ $ ->
           left: x*cellsize
         })
         $el.appendTo($board)
-        
+
   # Recalculate board when window resizes or fullscreen changes
   resizeHandler = ->
     console.log('Resize detected, recalculating board dimensions')
-    
+
     # Force recalculation of cell size based on current window dimensions
     makeBoard()
-    
-    # Always update global references to current game state
-    window.board = board if board
-    window.curPiece = curPiece if curPiece
-    window.preview = preview if preview
-    window.hold = hold if hold
-    
-    # Make sure renderBoardWithPiece is defined globally
-    window.renderBoardWithPiece = renderBoardWithPiece if renderBoardWithPiece
-    window.renderPreview = renderPreview if renderPreview
-    window.renderHold = renderHold if renderHold
-    
     # Re-render the board with the current piece
     if window.board && window.curPiece && window.renderBoardWithPiece
       console.log('Re-rendering board with piece')
       window.renderBoardWithPiece(window.board, window.curPiece)
-    
+
     # Also update preview and hold if they exist
     if window.preview && window.renderPreview
       console.log('Re-rendering preview')
@@ -64,43 +52,43 @@ $ ->
     if window.hold && window.renderHold
       console.log('Re-rendering hold')
       window.renderHold(window.hold)
-  
+
   # Make resizeHandler globally accessible
   window.resizeHandler = resizeHandler
-  
+
   # Store initial window dimensions
   window.lastWidth = window.innerWidth
   window.lastHeight = window.innerHeight
-  
+
   # Set up a loop to check for window size changes every 60ms
   checkWindowSizeLoop = ->
     currentWidth = window.innerWidth
     currentHeight = window.innerHeight
-    
+
     # If window size has changed, defer the resizeHandler call
     if currentWidth != window.lastWidth || currentHeight != window.lastHeight
-      console.log('Window size change detected by loop:', 
-        window.lastWidth, 'x', window.lastHeight, '->', 
+      console.log('Window size change detected by loop:',
+        window.lastWidth, 'x', window.lastHeight, '->',
         currentWidth, 'x', currentHeight)
-      
+
       # Defer the resizeHandler call with setTimeout
       setTimeout(window.resizeHandler, 10)
-      
+
       # Update stored dimensions
       window.lastWidth = currentWidth
       window.lastHeight = currentHeight
-    
+
     # Continue the loop
     setTimeout(checkWindowSizeLoop, 60)
-  
+
   # Start the window size check loop
   checkWindowSizeLoop()
-  
+
   # Listen for window resize events with 10ms and 60ms delays
   $(window).on 'resize', ->
     setTimeout(resizeHandler, 10)
     setTimeout(resizeHandler, 60)
-  
+
   # Listen for fullscreen change events across browsers with 10ms and 60ms delays
   document.addEventListener('fullscreenchange', ->
     setTimeout(resizeHandler, 10)
@@ -139,7 +127,7 @@ $ ->
       , 500)
     window.lastClears = counter.clears
 
-  renderBoardWithPiece = (board, piece) -> 
+  renderBoardWithPiece = (board, piece) ->
     print 'rendering', piece
     renderBoard(board)
     ghostPiece = Piece.hardDrop(piece, board)
@@ -201,7 +189,7 @@ $ ->
     renderBoard(nxtBoard)
     nxtBoard
 
-  randomPieceType = -> 
+  randomPieceType = ->
     print 'random piece, ', rand(7), pieces.length
     print pieces
     pieces[rand(7)]
@@ -261,7 +249,7 @@ $ ->
       if hold
         p = [curPiece.pieceType, hold].concat(preview)
       [w, h] = getDims($board)
-      
+
       # Check if WASM module is available
       if window.wasmAiMove?
         console.log "Using WASM for AI move"

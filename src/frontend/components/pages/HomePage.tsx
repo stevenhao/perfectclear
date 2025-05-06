@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { initializeWasm } from '../../services/wasm';
+import { GameBoard } from '../game/GameBoard';
+import { GameControls } from '../game/GameControls';
 
 export function HomePage() {
   const [wasmLoaded, setWasmLoaded] = useState(false);
@@ -7,7 +9,8 @@ export function HomePage() {
   useEffect(() => {
     const loadWasm = async () => {
       try {
-        setWasmLoaded(true);
+        const loaded = await initializeWasm();
+        setWasmLoaded(loaded);
       } catch (error) {
         console.error('Error loading WASM:', error);
       }
@@ -24,8 +27,7 @@ export function HomePage() {
             <h3 className="panel-title">💯💯💯💯💯</h3>
           </div>
           <div className="panel-body" style={{ position: 'relative', textAlign: 'center' }}>
-            <div>Game Controls will go here</div>
-            <div>WASM Status: {wasmLoaded ? 'Loaded' : 'Loading...'}</div>
+            <GameControls wasmLoaded={wasmLoaded} />
           </div>
         </div>
       </div>
@@ -35,7 +37,7 @@ export function HomePage() {
             <h3 className="panel-title" id="happy-indicator">🤓</h3>
           </div>
           <div className="panel-body" style={{ position: 'relative' }}>
-            <div>Game Board will go here</div>
+            <GameBoard />
           </div>
           <div id="counter" style={{ padding: '20px', fontSize: '14pt' }}>
             0

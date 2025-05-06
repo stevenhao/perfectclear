@@ -4,14 +4,13 @@ Let's get a perfect clear!
 
 # Running locally
 
-## Build & run the engine
+## Build
 - `make`
-- `./server.o 4445`
 
 ## Run the web server
 - `yarn global add coffeescript`
 - `yarn`
-- `coffee index.coffee 4445` (make sure `./server` is running in a separate process)
+- `coffee index.coffee`
 
 ## Open the app
 - Open `localhost:4444`

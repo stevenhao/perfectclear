@@ -41,89 +41,25 @@ app.get '/:page', (req, res, next) ->
 requests = {}
 reqCnt = 0
 
-port = process.argv[2] || 4445
-backendHost = process.env.BACKEND_HOST || 'localhost'
-net = require('net');
+# No backend server required anymore - all logic is in WASM
 serverStatus = {
   isConnected: true,
   startTime: Date.now(),
   lastConnectionTime: Date.now()
 }
 
-client = net.createConnection {host: backendHost, port}, -> 
-  # 'connect' listener
-  console.log('connected to server!');
-  serverStatus.isConnected = true
-  serverStatus.lastConnectionTime = Date.now()
-
-client.on 'data', (data) ->
-  msg = JSON.parse(data.toString())
-  print 'sending', msg
-  requests[msg.reqid].send(msg.body)
-
-# Add error and close event handlers
-client.on 'error', (err) ->
-  console.error('Connection error:', err)
-  serverStatus.isConnected = false
-
-client.on 'close', ->
-  console.log('Connection to server closed')
-  serverStatus.isConnected = false
-
-# Add a reconnection mechanism
-reconnectInterval = 5000 # 5 seconds
-setInterval ->
-  if !serverStatus.isConnected
-    console.log('Attempting to reconnect...')
-    try
-      newClient = net.createConnection {host: backendHost, port}, -> 
-        console.log('Reconnected to server!')
-        client = newClient
-        serverStatus.isConnected = true
-        serverStatus.lastConnectionTime = Date.now()
-        
-        # Set up the data handler again
-        client.on 'data', (data) ->
-          try
-            msg = JSON.parse(data.toString())
-            print 'sending', msg
-            if requests[msg.reqid]
-              requests[msg.reqid].send(msg.body)
-          catch e
-            console.error('Error processing data:', e)
-        
-        # Set up error handlers again
-        client.on 'error', (err) ->
-          console.error('Connection error:', err)
-          serverStatus.isConnected = false
-        
-        client.on 'close', ->
-          console.log('Connection to server closed')
-          serverStatus.isConnected = false
-      
-      newClient.on 'error', (err) ->
-        console.error('Reconnection error:', err)
-        # Don't crash on reconnection errors
-    catch e
-      console.error('Error during reconnection attempt:', e)
-, reconnectInterval
-
-app.post '/ai', (req, res) ->
-  if req.body?
-    msg = req.body
-    reqCnt += 1
-    msg.reqid = reqCnt # in theory, this is "atomic"
-    requests[msg.reqid] = res
-    print('/ai: got request', msg)
-    msg.search_breadth = msg.search_breadth || 200
-    client.write(JSON.stringify(msg));
-  else
-    res.send('bad request')
-
-# Add server status endpoint
+# Add server status endpoint for backward compatibility
 app.get '/server-status', (req, res) ->
   status = {
-    connected: serverStatus.isConnected,
-    uptime: if serverStatus.isConnected then Date.now() - serverStatus.lastConnectionTime else 0
+    connected: true,
+    uptime: Date.now() - serverStatus.startTime
   }
   res.json(status)
+
+app.post '/ai', (req, res) ->
+  # Server is no longer supported, AI computations should be done via WASM in the browser
+  res.status(400).json({
+    error: 'Server-side AI is no longer supported. Please use the WebAssembly implementation.'
+  })
+
+# Server status endpoint already defined above

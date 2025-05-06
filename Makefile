@@ -1,4 +1,4 @@
-all: server enginetest book
+all: enginetest book
 
 OS_NAME=$(shell uname -s)
 CXX=g++-9
@@ -11,8 +11,7 @@ else
   CXXFLAGS = -DSTEVEN -std=c++17 -g -O0 -O2 -I$(LIBUV_PATH)/include -I$(HTTP_PARSER_PATH) -I. -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64
 endif
 
-server: server.cpp
-	$(CXX) $(CXXFLAGS) -o server.o server.cpp
+# Server target removed as it's no longer needed
 
 enginetest: enginetest.cpp
 	$(CXX) $(CXXFLAGS) -o enginetest.o enginetest.cpp

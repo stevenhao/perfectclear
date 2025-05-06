@@ -23,14 +23,43 @@ std::vector<int> parsePieces(const std::string& input) {
       std::string piecesStr = input.substr(start + 1, end - start - 1);
       size_t commaPos = 0;
       size_t prevPos = 0;
+      
+      std::unordered_map<std::string, int> pieceMap = {
+        {"\"I\"", 0}, {"\"J\"", 1}, {"\"L\"", 2}, {"\"O\"", 3}, 
+        {"\"S\"", 4}, {"\"T\"", 5}, {"\"Z\"", 6}
+      };
+      
       while ((commaPos = piecesStr.find(",", prevPos)) != std::string::npos) {
-        std::string numStr = piecesStr.substr(prevPos, commaPos - prevPos);
-        pieces.push_back(std::stoi(numStr));
+        std::string pieceStr = piecesStr.substr(prevPos, commaPos - prevPos);
+        pieceStr.erase(0, pieceStr.find_first_not_of(" \t\n\r\f\v"));
+        pieceStr.erase(pieceStr.find_last_not_of(" \t\n\r\f\v") + 1);
+        
+        if (pieceMap.find(pieceStr) != pieceMap.end()) {
+          pieces.push_back(pieceMap[pieceStr]);
+        } else {
+          try {
+            pieces.push_back(std::stoi(pieceStr));
+          } catch (std::exception& e) {
+            std::cerr << "Error parsing piece: " << pieceStr << std::endl;
+          }
+        }
         prevPos = commaPos + 1;
       }
-      std::string lastNum = piecesStr.substr(prevPos);
-      if (!lastNum.empty()) {
-        pieces.push_back(std::stoi(lastNum));
+      
+      std::string lastPiece = piecesStr.substr(prevPos);
+      lastPiece.erase(0, lastPiece.find_first_not_of(" \t\n\r\f\v"));
+      lastPiece.erase(lastPiece.find_last_not_of(" \t\n\r\f\v") + 1);
+      
+      if (!lastPiece.empty()) {
+        if (pieceMap.find(lastPiece) != pieceMap.end()) {
+          pieces.push_back(pieceMap[lastPiece]);
+        } else {
+          try {
+            pieces.push_back(std::stoi(lastPiece));
+          } catch (std::exception& e) {
+            std::cerr << "Error parsing last piece: " << lastPiece << std::endl;
+          }
+        }
       }
     }
   }

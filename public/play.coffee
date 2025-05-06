@@ -56,34 +56,6 @@ $ ->
   # Make resizeHandler globally accessible
   window.resizeHandler = resizeHandler
 
-  # Store initial window dimensions
-  window.lastWidth = window.innerWidth
-  window.lastHeight = window.innerHeight
-
-  # Set up a loop to check for window size changes every 60ms
-  checkWindowSizeLoop = ->
-    currentWidth = window.innerWidth
-    currentHeight = window.innerHeight
-
-    # If window size has changed, defer the resizeHandler call
-    if currentWidth != window.lastWidth || currentHeight != window.lastHeight
-      console.log('Window size change detected by loop:',
-        window.lastWidth, 'x', window.lastHeight, '->',
-        currentWidth, 'x', currentHeight)
-
-      # Defer the resizeHandler call with setTimeout
-      setTimeout(window.resizeHandler, 10)
-
-      # Update stored dimensions
-      window.lastWidth = currentWidth
-      window.lastHeight = currentHeight
-
-    # Continue the loop
-    setTimeout(checkWindowSizeLoop, 60)
-
-  # Start the window size check loop
-  checkWindowSizeLoop()
-
   # Listen for window resize events with 10ms and 60ms delays
   $(window).on 'resize', ->
     setTimeout(resizeHandler, 10)

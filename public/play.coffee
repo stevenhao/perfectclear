@@ -2,6 +2,7 @@ pieces = ['I', 'J', 'L', 'O', 'S', 'T', 'Z']
 getColor = (x) ->
   ['black', 'cyan', 'blue', 'orange', 'yellow', 'lime', 'purple', 'red'][x];
 
+# Ghost piece color
 ghostColor = 'dimgray'
 getDims = ($well) ->
   [parseInt($well.attr('w')), parseInt($well.attr('h'))]

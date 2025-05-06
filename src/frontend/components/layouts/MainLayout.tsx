@@ -12,6 +12,7 @@ export function MainLayout() {
     connected: false,
     uptime: 0
   });
+  const [showStatusText, setShowStatusText] = useState(false);
 
   useEffect(() => {
     const checkServerStatus = async () => {
@@ -27,6 +28,10 @@ export function MainLayout() {
     const interval = setInterval(checkServerStatus, 5000);
     return () => clearInterval(interval);
   }, []);
+
+  const toggleStatusText = () => {
+    setShowStatusText(!showStatusText);
+  };
 
   return (
     <>
@@ -50,9 +55,21 @@ export function MainLayout() {
           <div className="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
             <ul className="nav navbar-nav navbar-right">
               <li>
-                <a href="#" id="server-status-indicator">
-                  Server: <span id="server-status-light" className={`status-light ${serverStatus.connected ? 'connected' : 'disconnected'}`}>●</span>
-                  <span id="server-uptime">{serverStatus.connected ? ` ${Math.floor(serverStatus.uptime / 1000)}s` : ''}</span>
+                <a 
+                  href="#" 
+                  id="server-status-indicator" 
+                  onClick={toggleStatusText}
+                  style={{ display: 'flex', alignItems: 'center' }}
+                >
+                  {showStatusText && <span style={{ marginRight: '5px' }}>Server:</span>}
+                  <span 
+                    id="server-status-light" 
+                    className={`status-light ${serverStatus.connected ? 'connected' : 'disconnected'}`}
+                    style={{ fontSize: '16px' }}
+                  >
+                    ●
+                  </span>
+                  {showStatusText && <span id="server-uptime">{serverStatus.connected ? ` ${Math.floor(serverStatus.uptime / 1000)}s` : ''}</span>}
                 </a>
               </li>
             </ul>

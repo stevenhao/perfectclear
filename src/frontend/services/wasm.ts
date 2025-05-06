@@ -5,13 +5,18 @@ export async function initializeWasm() {
         if (path.endsWith('.wasm')) return `/dist/${path}`;
         if (path.endsWith('.data')) return `/dist/${path}`;
         return path;
+      },
+      onRuntimeInitialized: function() {
+        console.log('WASM runtime initialized');
       }
     };
 
-    await loadScript('/dist/perfectclear.js');
+    console.log('Loading WASM scripts...');
     await loadScript('/perfectclear-wasm.js');
+    await loadScript('/dist/perfectclear.js');
 
     if ((window as any).loadWasmModule) {
+      console.log('Calling loadWasmModule...');
       await (window as any).loadWasmModule();
       console.log('WASM module loaded successfully');
       return true;

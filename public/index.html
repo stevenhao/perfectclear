@@ -82,14 +82,7 @@
                 </svg>
               </button>
             </div>
-            <!-- Add fullscreen button -->
-            <div style="position: absolute; right: 20px; top: 20px; z-index: 100;">
-              <button id="fullscreen-btn" type="button" class="btn btn-sm" style="width: 60px; height: 60px; border-radius: 50%; padding: 0; background-color: rgba(255,255,255,0.2); border: none; box-shadow: 0 0 10px rgba(0,0,0,0.5); display: flex; justify-content: center; align-items: center;">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="white" viewBox="0 0 16 16">
-                  <path d="M1.5 1a.5.5 0 0 0-.5.5v4a.5.5 0 0 1-1 0v-4A1.5 1.5 0 0 1 1.5 0h4a.5.5 0 0 1 0 1h-4zM10 .5a.5.5 0 0 1 .5-.5h4A1.5 1.5 0 0 1 16 1.5v4a.5.5 0 0 1-1 0v-4a.5.5 0 0 0-.5-.5h-4a.5.5 0 0 1-.5-.5zM.5 10a.5.5 0 0 1 .5.5v4a.5.5 0 0 0 .5.5h4a.5.5 0 0 1 0 1h-4A1.5 1.5 0 0 1 0 14.5v-4a.5.5 0 0 1 .5-.5zm15 0a.5.5 0 0 1 .5.5v4a1.5 1.5 0 0 1-1.5 1.5h-4a.5.5 0 0 1 0-1h4a.5.5 0 0 0 .5-.5v-4a.5.5 0 0 1 .5-.5z"/>
-                </svg>
-              </button>
-            </div>
+            <!-- Fullscreen button moved to bottom right -->
             <div class="panel-body" style="position: relative; height: 100vh; display: flex; justify-content: center; align-items: center; padding: 0;">
               <div id="hold" style="position: absolute; left: 10px; top: 10px; width: 8vh; height: 8vh; background-color: black">
               </div>
@@ -116,6 +109,15 @@
                   <span id="wasm-status-light" class="status-light offline" style="font-size: 16px; margin-right: 8px;">●</span>
                   <span id="wasm-status-text" class="status-text" style="color: white; font-size: 14px;">AI Engine: Offline</span>
                 </div>
+              </div>
+              
+              <!-- Fullscreen button moved to bottom right -->
+              <div style="position: absolute; right: 20px; bottom: 20px; z-index: 100;">
+                <button id="fullscreen-btn" type="button" class="btn btn-sm" style="width: 60px; height: 60px; border-radius: 50%; padding: 0; background-color: rgba(255,255,255,0.2); border: none; box-shadow: 0 0 10px rgba(0,0,0,0.5); display: flex; justify-content: center; align-items: center;">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="white" viewBox="0 0 16 16">
+                    <path d="M1.5 1a.5.5 0 0 0-.5.5v4a.5.5 0 0 1-1 0v-4A1.5 1.5 0 0 1 1.5 0h4a.5.5 0 0 1 0 1h-4zM10 .5a.5.5 0 0 1 .5-.5h4A1.5 1.5 0 0 1 16 1.5v4a.5.5 0 0 1-1 0v-4a.5.5 0 0 0-.5-.5h-4a.5.5 0 0 1-.5-.5zM.5 10a.5.5 0 0 1 .5.5v4a.5.5 0 0 0 .5.5h4a.5.5 0 0 1 0 1h-4A1.5 1.5 0 0 1 0 14.5v-4a.5.5 0 0 1 .5-.5zm15 0a.5.5 0 0 1 .5.5v4a1.5 1.5 0 0 1-1.5 1.5h-4a.5.5 0 0 1 0-1h4a.5.5 0 0 0 .5-.5v-4a.5.5 0 0 1 .5-.5z"/>
+                  </svg>
+                </button>
               </div>
               
               <!-- Removed all other buttons and controls -->

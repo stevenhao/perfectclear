@@ -36,9 +36,22 @@ $ ->
         
   # Recalculate board when window resizes
   $(window).on 'resize', ->
+    # Force recalculation of cell size based on current window dimensions
     makeBoard()
+    
+    # Store global references to board and piece for resize events
+    window.board = board if board && !window.board
+    window.curPiece = curPiece if curPiece && !window.curPiece
+    
+    # Re-render the board with the current piece
     if window.board && window.curPiece
       renderBoardWithPiece(window.board, window.curPiece)
+      
+    # Also update preview and hold if they exist
+    if window.preview && window.renderPreview
+      window.renderPreview(window.preview)
+    if window.hold && window.renderHold
+      window.renderHold(window.hold)
 
   renderBoard = (board) ->
     [w, h] = getDims($board)

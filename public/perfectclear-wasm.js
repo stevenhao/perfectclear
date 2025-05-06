@@ -74,17 +74,27 @@ function loadWasmModule() {
 function updateWasmStatus(status) {
   const $statusLight = $('#wasm-status-light');
   const $statusText = $('#wasm-status-text');
+  const $autoplay = $('#autoplay');
   
   if ($statusLight.length && $statusText.length) {
     if (status === 'online') {
       $statusLight.text('●').removeClass('offline loading').addClass('online');
       $statusText.text('AI Engine: Online (WebAssembly)');
+      $autoplay.prop('disabled', false).css('opacity', '1');
+      
+      if (window.zenMode && !window.autoplaying) {
+        setTimeout(function() {
+          $autoplay.click();
+        }, 500);
+      }
     } else if (status === 'loading') {
       $statusLight.text('●').removeClass('offline online').addClass('loading');
       $statusText.text('AI Engine: Loading...');
+      $autoplay.prop('disabled', true).css('opacity', '0.5');
     } else {
       $statusLight.text('●').removeClass('online loading').addClass('offline');
       $statusText.text('AI Engine: Offline (WebAssembly not supported)');
+      $autoplay.prop('disabled', false).css('opacity', '1');
     }
   }
 }

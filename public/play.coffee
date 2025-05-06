@@ -77,12 +77,14 @@ $ ->
     currentWidth = window.innerWidth
     currentHeight = window.innerHeight
     
-    # If window size has changed, call resizeHandler
+    # If window size has changed, defer the resizeHandler call
     if currentWidth != window.lastWidth || currentHeight != window.lastHeight
       console.log('Window size change detected by loop:', 
         window.lastWidth, 'x', window.lastHeight, '->', 
         currentWidth, 'x', currentHeight)
-      window.resizeHandler()
+      
+      # Defer the resizeHandler call with setTimeout
+      setTimeout(window.resizeHandler, 10)
       
       # Update stored dimensions
       window.lastWidth = currentWidth

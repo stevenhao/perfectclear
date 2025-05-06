@@ -15,12 +15,19 @@ app.use((err: Error, req: express.Request, res: express.Response, next: express.
   res.status(500).send('Server error');
 });
 
-app.use(express.static(path.join(__dirname, '../public')));
+if (process.env.NODE_ENV === 'production') {
+  app.use(express.static(path.join(__dirname, '../dist')));
+} else {
+  app.use(express.static(path.join(__dirname, '../public')));
+}
 
 app.use('/', routes);
-app.get('/', (req, res) => {
-  res.send('hi');
-});
+
+if (process.env.NODE_ENV === 'production') {
+  app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, '../dist/index.html'));
+  });
+}
 
 cppServerService.start();
 

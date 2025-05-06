@@ -102,6 +102,14 @@
                 </div>
               </div>
               
+              <!-- WASM status indicator -->
+              <div style="position: absolute; left: 20px; bottom: 20px; z-index: 100;">
+                <div style="display: flex; align-items: center; background-color: rgba(0,0,0,0.5); padding: 8px 12px; border-radius: 20px; box-shadow: 0 0 10px rgba(0,0,0,0.5);">
+                  <span id="wasm-status-light" class="status-light offline" style="font-size: 16px; margin-right: 8px;">●</span>
+                  <span id="wasm-status-text" style="color: white; font-size: 14px;">AI Engine: Offline</span>
+                </div>
+              </div>
+              
               <!-- Removed all other buttons and controls -->
             </div>
           </div>
@@ -116,9 +124,20 @@
       // Set a flag to identify zen mode
       window.zenMode = true;
       
-      // Initialize the WASM module
+      // Initialize the WASM module and defer game initialization
       loadWasmModule().then(() => {
         console.log('WASM module loaded successfully in zen mode');
+        
+        // The autoplay will be started automatically by updateWasmStatus
+        // when it transitions from loading to online state
+        
+        // Initialize the game state if needed
+        if (!window.board) {
+          console.log('Deferring game initialization until after WASM loads');
+          
+          // Game initialization will be handled by autoplayStep
+          // when it's called by updateWasmStatus
+        }
       }).catch(error => {
         console.error('Failed to load WASM module in zen mode:', error);
       });

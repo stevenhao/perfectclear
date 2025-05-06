@@ -4,10 +4,29 @@
   background-color: gray;
 }
 
-/* Server status indicator styles */
+/* Status indicator styles */
 .status-light {
   font-size: 16px;
   margin-right: 5px;
+}
+
+.online {
+  color: #00c853;
+}
+
+.offline {
+  color: #ff3d00;
+}
+
+.loading {
+  color: #ffab00;
+  animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+  0% { opacity: 0.5; }
+  50% { opacity: 1; }
+  100% { opacity: 0.5; }
 }
 
 .status-light.online {

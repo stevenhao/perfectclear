@@ -24,35 +24,66 @@ requests = {}
 reqCnt = 0
 
 port = process.argv[2] || 4445
+backendHost = process.env.BACKEND_HOST || 'localhost'
 net = require('net');
-client = net.createConnection {port}, -> 
-  # 'connect' listener
-  console.log('connected to server!');
+client = null
+serverConnected = false
+serverUptime = 0
 
-client.on 'data', (data) ->
-  msg = JSON.parse(data.toString())
-  print 'sending', msg
-  requests[msg.reqid].send(msg.body)
+# Function to connect to the backend
+connectToBackend = ->
+  client = net.createConnection {host: backendHost, port}, -> 
+    # 'connect' listener
+    console.log('connected to server!')
+    serverConnected = true
+  
+  client.on 'data', (data) ->
+    msg = JSON.parse(data.toString())
+    print 'sending', msg
+    if requests[msg.reqid]
+      requests[msg.reqid].send(msg.body)
+  
+  client.on 'error', (err) ->
+    console.log('Connection error:', err.message)
+    serverConnected = false
+    serverUptime = null
+    setTimeout(connectToBackend, 5000)
+  
+  client.on 'close', ->
+    console.log('Connection closed')
+    serverConnected = false
+    serverUptime = null
+    setTimeout(connectToBackend, 5000)
+
+# Initial connection attempt
+connectToBackend()
 
 # Server uptime tracking
-serverUptime = 0
 updateUptime = ->
-  reqCnt += 1
-  uptimeReq = {
-    type: 'uptime',
-    reqid: reqCnt
-  }
-  requests[reqCnt] = {
-    send: (data) ->
-      serverUptime = data.uptime_seconds
-  }
-  client.write(JSON.stringify(uptimeReq))
+  if serverConnected && client
+    reqCnt += 1
+    uptimeReq = {
+      type: 'uptime',
+      reqid: reqCnt
+    }
+    requests[reqCnt] = {
+      send: (data) ->
+        serverUptime = data.uptime_seconds
+    }
+    try
+      client.write(JSON.stringify(uptimeReq))
+    catch e
+      console.log('Error sending uptime request:', e.message)
+      serverUptime = null
 
 # Update uptime every 5 seconds
 setInterval(updateUptime, 5000)
 
 app.get '/uptime', (req, res) ->
-  res.json({ uptime_seconds: serverUptime })
+  if serverConnected && serverUptime != null
+    res.json({ uptime_seconds: serverUptime })
+  else
+    res.json({ status: 'offline' })
 
 app.post '/ai', (req, res) ->
   if req.body?

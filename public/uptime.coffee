@@ -7,8 +7,11 @@ updateUptimeDisplay = ->
     method: 'GET'
     timeout: 2000  # Add timeout to detect disconnection faster
     success: (data) ->
-      serverConnected = true
-      if data && data.uptime_seconds != undefined
+      if data.status == 'offline'
+        serverConnected = false
+        $('#uptime-value').text('Offline')
+      else if data && data.uptime_seconds != undefined
+        serverConnected = true
         seconds = data.uptime_seconds
         days = Math.floor(seconds / 86400)
         hours = Math.floor((seconds % 86400) / 3600)
@@ -26,6 +29,7 @@ updateUptimeDisplay = ->
         
         $('#uptime-value').text(uptimeText)
       else
+        serverConnected = false
         $('#uptime-value').text('Offline')
     error: ->
       serverConnected = false

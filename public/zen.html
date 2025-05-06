@@ -102,23 +102,13 @@
       // Set a flag to identify zen mode
       window.zenMode = true;
       
-      // Override the autoplay click handler to toggle icons
-      $('#autoplay').off('click').on('click', function() {
-        if (window.autoplaying) {
-          $('#pause-icon').hide();
-          $('#play-icon').show();
-          window.autoplaying = false;
-        } else {
-          $('#play-icon').hide();
-          $('#pause-icon').show();
-          window.autoplaying = true;
-          window.autoplayStep();
-        }
-      });
+      // autoplayStep is already defined in play.coffee
       
-      // Start autoplay automatically
+      // Start autoplay automatically after a short delay
       setTimeout(function() {
+        // Only start if not already playing
         if (!window.autoplaying) {
+          // Trigger the original autoplay click handler from play.coffee
           $('#autoplay').click();
         }
       }, 1000);

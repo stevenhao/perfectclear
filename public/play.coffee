@@ -426,6 +426,9 @@ $ ->
         autoplaying = true
         window.autoplaying = true
         autoplayStep()
+      
+      # Prevent focus on button after click (can cause keyboard navigation issues)
+      $('#autoplay').blur()
 
     $('#piece-send').click (evt) ->
       aiMove (data) ->

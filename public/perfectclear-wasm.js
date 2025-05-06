@@ -37,9 +37,11 @@ async function fetchFile(url) {
 
 function loadWasmModule() {
   return new Promise((resolve, reject) => {
+    updateWasmStatus('loading');
+    
     if (!checkWasmSupport()) {
       console.error('WebAssembly is not supported in this browser');
-      updateWasmStatus(false);
+      updateWasmStatus('offline');
       reject(new Error('WebAssembly not supported'));
       return;
     }
@@ -54,31 +56,34 @@ function loadWasmModule() {
         
         console.log('PerfectClear WASM module initialized');
         wasmInitialized = true;
-        updateWasmStatus(true);
+        updateWasmStatus('online');
         resolve(Module);
       } catch (error) {
         console.error('Error during initialization:', error);
-        updateWasmStatus(false);
+        updateWasmStatus('offline');
         reject(error);
       }
     }).catch(error => {
       console.error('Failed to load WASM module:', error);
-      updateWasmStatus(false);
+      updateWasmStatus('offline');
       reject(error);
     });
   });
 }
 
-function updateWasmStatus(isOnline) {
+function updateWasmStatus(status) {
   const $statusLight = $('#wasm-status-light');
   const $statusText = $('#wasm-status-text');
   
   if ($statusLight.length && $statusText.length) {
-    if (isOnline) {
-      $statusLight.text('●').removeClass('offline').addClass('online');
+    if (status === 'online') {
+      $statusLight.text('●').removeClass('offline loading').addClass('online');
       $statusText.text('AI Engine: Online (WebAssembly)');
+    } else if (status === 'loading') {
+      $statusLight.text('●').removeClass('offline online').addClass('loading');
+      $statusText.text('AI Engine: Loading...');
     } else {
-      $statusLight.text('●').removeClass('online').addClass('offline');
+      $statusLight.text('●').removeClass('online loading').addClass('offline');
       $statusText.text('AI Engine: Offline (WebAssembly not supported)');
     }
   }
@@ -120,7 +125,10 @@ function wasmAiMove(board, pieces, searchBreadth, callback) {
       console.log('Raw result from WASM:', resultStr);
       
       const result = JSON.parse(resultStr);
-      wasmModule._wasm_free_string(resultPtr);
+      
+      if (wasmModule._wasm_free_string) {
+        wasmModule._wasm_free_string(resultPtr);
+      }
       
       if (result.error) {
         console.error('WASM error:', result.error);
@@ -133,8 +141,12 @@ function wasmAiMove(board, pieces, searchBreadth, callback) {
       callback({ error: 'WASM execution error: ' + error.message });
     } finally {
       try {
-        if (boardPtr) wasmModule._free(boardPtr);
-        if (piecesPtr) wasmModule._free(piecesPtr);
+        if (boardPtr && typeof wasmModule._free === 'function') {
+          wasmModule._free(boardPtr);
+        }
+        if (piecesPtr && typeof wasmModule._free === 'function') {
+          wasmModule._free(piecesPtr);
+        }
       } catch (e) {
         console.error('Error freeing memory:', e);
       }
@@ -150,85 +162,171 @@ function autoplayStep() {
     return;
   }
   
-  const board = window.board;
-  const curPiece = window.curPiece;
-  const hold = window.hold;
-  const preview = window.preview;
-  const bag = window.bag;
-  
-  let p = [curPiece.pieceType].concat(preview);
-  if (hold) {
-    p = [curPiece.pieceType, hold].concat(preview);
+  if (window.zenMode && (!window.board || !window.curPiece || !window.preview)) {
+    console.log('Initializing game state for zen mode');
+    
+    if (!window.board) {
+      try {
+        if (window.Board && typeof window.Board.create === 'function') {
+          window.board = window.Board.create(10, 10);
+        } else {
+          console.log('Board.create not available, creating empty board array');
+          window.board = Array(10).fill().map(() => Array(10).fill(0));
+        }
+      } catch (e) {
+        console.error('Error creating board:', e);
+        window.board = Array(10).fill().map(() => Array(10).fill(0));
+      }
+    }
+    
+    if (!window.bag) {
+      window.bag = window.makeBag ? window.makeBag() : ['I', 'O', 'T', 'L', 'J', 'S', 'Z'];
+    }
+    
+    if (!window.nextBag) {
+      window.nextBag = window.makeBag ? window.makeBag() : ['I', 'O', 'T', 'L', 'J', 'S', 'Z'];
+    }
+    
+    if (!window.preview) {
+      window.preview = window.bag.slice(0, 6);
+    }
+    
+    if (!window.curPiece) {
+      const pieceType = window.bag.shift();
+      window.curPiece = window.Piece ? window.Piece.create(pieceType, window.board) : { pieceType: pieceType, location: [4, 0], rotation: 0 };
+      
+      if (window.preview && window.preview.length < 6) {
+        window.preview.push(window.nextBag.shift());
+      }
+    }
+    
+    if (window.hold === undefined) {
+      window.hold = null;
+    }
+    
+    if (!window.counter) {
+      window.counter = { pieces: 0, clears: 0 };
+    }
+    
+    if (window.renderBoardWithPiece) {
+      window.renderBoardWithPiece(window.board, window.curPiece);
+    }
+    if (window.renderPreview) {
+      window.renderPreview(window.preview);
+    }
+    if (window.renderHold) {
+      window.renderHold(window.hold);
+    }
+    if (window.renderCounter) {
+      window.renderCounter(window.counter);
+    }
+    
+    setTimeout(window.autoplayStep, 500);
+    return;
   }
   
-  wasmAiMove(board, p, 200, function(data) {
-    if (!window.autoplaying) {
+  if (!window.board || !window.curPiece || !window.preview) {
+    console.error('Game state not initialized for autoplay');
+    setTimeout(window.autoplayStep, 500); // Try again after a delay
+    return;
+  }
+  
+  try {
+    const board = window.board;
+    const curPiece = window.curPiece;
+    const hold = window.hold;
+    const preview = window.preview || [];
+    const bag = window.bag || [];
+    
+    console.log('Autoplay step with piece:', curPiece);
+    
+    if (!curPiece.pieceType) {
+      console.error('Current piece has no pieceType:', curPiece);
+      if (window.Piece && window.bag && window.bag.length > 0) {
+        window.curPiece = window.Piece.create(window.bag.shift(), board);
+        setTimeout(window.autoplayStep, 500); // Try again after a delay
+      }
       return;
     }
     
-    console.log('AI move result:', data);
-    
-    if (data.error) {
-      console.error('Error in AI move:', data.error);
-      return;
+    let p = [curPiece.pieceType].concat(preview);
+    if (hold) {
+      p = [curPiece.pieceType, hold].concat(preview);
     }
     
-    const path = data.path;
-    const animationTime = window.zenMode ? 300 : 500;
-    const interval = animationTime / (path.length + 1);
-    let time = 0;
-    
-    if (window.save) {
-      window.save();
-    }
-    
-    let piece = window.Piece.create(curPiece.pieceType, board);
-    
-    path.forEach(function(mv) {
-      piece = window.AIcommands[mv](piece, board);
-      const draw = piece;
-      time += interval;
+    wasmAiMove(board, p, 200, function(data) {
+      if (!window.autoplaying) {
+        return;
+      }
+      
+      console.log('AI move result:', data);
+      
+      if (data.error) {
+        console.error('Error in AI move:', data.error);
+        setTimeout(window.autoplayStep, 1000); // Try again after a delay
+        return;
+      }
+      
+      const path = data.path;
+      const animationTime = window.zenMode ? 300 : 500;
+      const interval = animationTime / (path.length + 1);
+      let time = 0;
+      
+      if (window.save) {
+        window.save();
+      }
+      
+      let piece = window.Piece.create(curPiece.pieceType, board);
+      
+      path.forEach(function(mv) {
+        piece = window.AIcommands[mv](piece, board);
+        const draw = piece;
+        time += interval;
+        
+        setTimeout(function() {
+          window.renderBoardWithPiece(board, draw);
+        }, time);
+      });
       
       setTimeout(function() {
-        window.renderBoardWithPiece(board, draw);
-      }, time);
-    });
-    
-    setTimeout(function() {
-      window.renderBoardWithPiece(board, piece);
-    }, animationTime);
-    
-    setTimeout(function() {
-      if (!window.Board.canAddPiece(board, piece)) {
-        window.Board.reset(board);
-        window.bag = window.nextBag;
-        window.nextBag = window.makeBag();
-        window.hold = null;
-        window.curPiece = window.nextPiece();
-        window.renderHold(window.hold);
-        window.renderBoardWithPiece(board, window.curPiece);
-        window.renderPreview(window.preview);
-      } else {
-        piece = window.Piece.hardDrop(piece, board);
-        window.board = window.Board.addPiece(board, piece);
-        window.curPiece = window.nextPiece();
-        window.renderBoardWithPiece(window.board, window.curPiece);
-        window.renderPreview(window.preview);
-        
-        if (window.counter) {
-          window.counter.pieces += 1;
-          if (window.Board.isEmpty(window.board)) {
-            window.counter.clears += 1;
+        window.renderBoardWithPiece(board, piece);
+      }, animationTime);
+      
+      setTimeout(function() {
+        if (!window.Board.canAddPiece(board, piece)) {
+          window.Board.reset(board);
+          window.bag = window.nextBag;
+          window.nextBag = window.makeBag();
+          window.hold = null;
+          window.curPiece = window.nextPiece();
+          window.renderHold(window.hold);
+          window.renderBoardWithPiece(board, window.curPiece);
+          window.renderPreview(window.preview);
+        } else {
+          piece = window.Piece.hardDrop(piece, board);
+          window.board = window.Board.addPiece(board, piece);
+          window.curPiece = window.nextPiece();
+          window.renderBoardWithPiece(window.board, window.curPiece);
+          window.renderPreview(window.preview);
+          
+          if (window.counter) {
+            window.counter.pieces += 1;
+            if (window.Board.isEmpty(window.board)) {
+              window.counter.clears += 1;
+            }
+            window.renderCounter(window.counter);
           }
-          window.renderCounter(window.counter);
         }
+      }, animationTime * 1.1);
+      
+      if (window.autoplaying) {
+        setTimeout(window.autoplayStep, animationTime * 1.2);
       }
-    }, animationTime * 1.1);
-    
-    if (window.autoplaying) {
-      setTimeout(window.autoplayStep, animationTime * 1.2);
-    }
-  });
+    });
+  } catch (error) {
+    console.error('Error in autoplayStep:', error);
+    setTimeout(window.autoplayStep, 1000); // Try again after a delay
+  }
 }
 
 window.loadWasmModule = loadWasmModule;

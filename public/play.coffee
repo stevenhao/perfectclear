@@ -16,6 +16,37 @@ $ ->
   $board = $('#game-inner')
   $preview = $('#previews')
   $hold = $('#hold')
+  
+  # Add server status indicator functionality
+  $statusLight = $('#server-status-light')
+  $serverUptime = $('#server-uptime')
+  
+  # Format uptime into human-readable format
+  formatUptime = (ms) ->
+    seconds = Math.floor(ms / 1000)
+    minutes = Math.floor(seconds / 60)
+    hours = Math.floor(minutes / 60)
+    
+    if hours > 0
+      "#{hours}h #{minutes % 60}m #{seconds % 60}s"
+    else if minutes > 0
+      "#{minutes}m #{seconds % 60}s"
+    else
+      "#{seconds}s"
+  
+  # Function to update server status
+  updateServerStatus = ->
+    $.getJSON '/server-status', (data) ->
+      if data.connected
+        $statusLight.text('●').removeClass('offline').addClass('online')
+        $serverUptime.text(formatUptime(data.uptime))
+      else
+        $statusLight.text('●').removeClass('online').addClass('offline')
+        $serverUptime.text('Offline')
+  
+  # Update status immediately and every 1 second
+  updateServerStatus()
+  setInterval(updateServerStatus, 1000)
   do makeBoard = ->
     $board.empty()
     [w, h] = getDims($board)

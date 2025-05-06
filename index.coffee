@@ -41,25 +41,4 @@ app.get '/:page', (req, res, next) ->
 requests = {}
 reqCnt = 0
 
-# No backend server required anymore - all logic is in WASM
-serverStatus = {
-  isConnected: true,
-  startTime: Date.now(),
-  lastConnectionTime: Date.now()
-}
-
-# Add server status endpoint for backward compatibility
-app.get '/server-status', (req, res) ->
-  status = {
-    connected: true,
-    uptime: Date.now() - serverStatus.startTime
-  }
-  res.json(status)
-
-app.post '/ai', (req, res) ->
-  # Server is no longer supported, AI computations should be done via WASM in the browser
-  res.status(400).json({
-    error: 'Server-side AI is no longer supported. Please use the WebAssembly implementation.'
-  })
-
-# Server status endpoint already defined above
+# All logic is now in WASM, no server endpoints needed

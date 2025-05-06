@@ -44,9 +44,9 @@ $ ->
         $statusLight.text('●').removeClass('online').addClass('offline')
         $serverUptime.text('Offline')
   
-  # Update status immediately and every 5 seconds
+  # Update status immediately and every 1 second
   updateServerStatus()
-  setInterval(updateServerStatus, 5000)
+  setInterval(updateServerStatus, 1000)
   do makeBoard = ->
     $board.empty()
     [w, h] = getDims($board)

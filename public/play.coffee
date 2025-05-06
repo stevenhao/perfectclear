@@ -122,12 +122,14 @@ $ ->
 
   renderPreview = (preview) ->
     [w, h] = [4, 20]
-    # Check if we're on mobile (using screen width as a proxy)
+    # Force mobile mode for small screens - using a more aggressive check
     isMobile = window.innerWidth <= 800
     
     if isMobile
       # For mobile, use a different cell size calculation optimized for horizontal layout
-      cellsize = min [$preview.height() / 2, $preview.width() / (preview.length * 4 + 2)]
+      # Make cells slightly smaller to fit more pieces horizontally
+      cellsize = min [$preview.height() / 2.5, $preview.width() / (preview.length * 5)]
+      console.log("MOBILE MODE ACTIVE - Horizontal queue enabled")
     else
       cellsize = min [$preview.height() / 20, $preview.width() / 5]
       
@@ -136,34 +138,61 @@ $ ->
     
     console.log("Rendering preview with isMobile:", isMobile, "cellsize:", cellsize, "preview width:", $preview.width(), "preview height:", $preview.height())
     
+    # Add a container for mobile mode to help with positioning
+    if isMobile
+      $previewContainer = $('<div>').addClass('mobile-preview-container').css({
+        display: 'flex',
+        width: '100%',
+        height: '100%',
+        justifyContent: 'space-around',
+        alignItems: 'center'
+      })
+      $preview.append($previewContainer)
+    
     [0..preview.length - 1].forEach (i) ->
       pieceType = preview[i]
       color = getColor(PieceType.getIndex(pieceType))
+      
+      if isMobile
+        # Create a container for each piece in mobile mode
+        $pieceContainer = $('<div>').addClass('piece-container').css({
+          position: 'relative',
+          width: cellsize * 4,
+          height: cellsize * 3,
+          display: 'inline-block',
+          margin: '0 ' + (cellsize / 4) + 'px'
+        })
+        $previewContainer.append($pieceContainer)
+      
       PieceType.blocks(pieceType).forEach ([x, y]) ->
         $el = $('<div>').attr('x', x).attr('y', y)
         
         if isMobile
           # Horizontal layout for mobile - pieces side by side
-          cx = (3 + i * 4) * cellsize
-          cy = $preview.height() / 2
+          # Center each piece in its container
+          cx = cellsize * 2
+          cy = cellsize * 1.5
           left = cx + x * cellsize - cellsize / 2
           top = cy - y * cellsize - cellsize / 2
+          
+          # Append to the piece container
+          $el.appendTo($pieceContainer)
         else
           # Vertical layout for desktop (original)
           cx = mid
           cy = (2.5 + 4 * i) * cellsize
           left = cx + x * cellsize - cellsize / 2
           top = cy - y * cellsize - cellsize / 2
+          $el.appendTo($preview)
           
         $el.addClass('block').addClass('preview').css({
-          width: cellsize - 1
-          height: cellsize - 1
-          position: 'absolute'
-          backgroundColor: color
-          left: left
+          width: cellsize - 1,
+          height: cellsize - 1,
+          position: 'absolute',
+          backgroundColor: color,
+          left: left,
           top: top
         })
-        $el.appendTo($preview)
 
   renderHold = (pieceType) ->
     [w, h] = [4, 3]

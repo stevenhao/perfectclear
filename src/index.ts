@@ -2,7 +2,6 @@ import express from 'express';
 import bodyParser from 'body-parser';
 import path from 'path';
 import routes from './routes/routes';
-import { cppServerService } from './services/cppServer';
 
 const app = express();
 const port = process.env.PORT || 4444;
@@ -22,14 +21,20 @@ app.get('/', (req, res) => {
   res.send('hi');
 });
 
-cppServerService.start();
+declare global {
+  namespace NodeJS {
+    interface Global {
+      serverStartTime: number;
+    }
+  }
+}
+global.serverStartTime = Date.now();
 
 app.listen(port, () => {
   console.log(`Listening on port ${port}`);
 });
 
 process.on('SIGINT', () => {
-  console.log('Shutting down servers...');
-  cppServerService.stop();
+  console.log('Shutting down server...');
   process.exit();
 });

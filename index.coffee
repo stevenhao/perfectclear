@@ -57,25 +57,37 @@ reconnectInterval = 5000 # 5 seconds
 setInterval ->
   if !serverStatus.isConnected
     console.log('Attempting to reconnect...')
-    client = net.createConnection {host: backendHost, port}, -> 
-      console.log('Reconnected to server!')
-      serverStatus.isConnected = true
-      serverStatus.lastConnectionTime = Date.now()
+    try
+      newClient = net.createConnection {host: backendHost, port}, -> 
+        console.log('Reconnected to server!')
+        client = newClient
+        serverStatus.isConnected = true
+        serverStatus.lastConnectionTime = Date.now()
+        
+        # Set up the data handler again
+        client.on 'data', (data) ->
+          try
+            msg = JSON.parse(data.toString())
+            print 'sending', msg
+            if requests[msg.reqid]
+              requests[msg.reqid].send(msg.body)
+          catch e
+            console.error('Error processing data:', e)
+        
+        # Set up error handlers again
+        client.on 'error', (err) ->
+          console.error('Connection error:', err)
+          serverStatus.isConnected = false
+        
+        client.on 'close', ->
+          console.log('Connection to server closed')
+          serverStatus.isConnected = false
       
-      # Set up the data handler again
-      client.on 'data', (data) ->
-        msg = JSON.parse(data.toString())
-        print 'sending', msg
-        requests[msg.reqid].send(msg.body)
-      
-      # Set up error handlers again
-      client.on 'error', (err) ->
-        console.error('Connection error:', err)
-        serverStatus.isConnected = false
-      
-      client.on 'close', ->
-        console.log('Connection to server closed')
-        serverStatus.isConnected = false
+      newClient.on 'error', (err) ->
+        console.error('Reconnection error:', err)
+        # Don't crash on reconnection errors
+    catch e
+      console.error('Error during reconnection attempt:', e)
 , reconnectInterval
 
 app.post '/ai', (req, res) ->

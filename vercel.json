@@ -1,7 +1,8 @@
 {
   "version": 2,
   "builds": [
-    { "src": "package.json", "use": "@vercel/node" }
+    { "src": "public/**", "use": "@vercel/static" },
+    { "src": "dist/**", "use": "@vercel/node" }
   ],
   "routes": [
     { "src": "/server-status", "dest": "/dist/index.js" },

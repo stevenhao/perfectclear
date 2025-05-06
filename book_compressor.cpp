@@ -5,6 +5,7 @@
 #include <unordered_map>
 
 using namespace std;
+typedef long long ll;
 
 int main() {
     ifstream inFile("book_100k.txt");
@@ -15,14 +16,15 @@ int main() {
         return 1;
     }
     
-    string line;
-    int lineCount = 0;
+    int turn, msk, cnt;
+    ll board;
+    int entries = 0;
     
-    while (getline(inFile, line) && lineCount < 100000) { // Limit to 100,000 lines
-        outFile << line << "\n";
-        lineCount++;
+    while (inFile >> turn >> board >> msk >> cnt) {
+        outFile << turn << " " << board << " " << msk << " " << cnt << "\n";
+        entries++;
     }
     
-    cout << "Compressed book file created with " << lineCount << " lines." << endl;
+    cout << "Compressed book file created with " << entries << " entries." << endl;
     return 0;
 }

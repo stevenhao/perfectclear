@@ -15,8 +15,18 @@ function setupFileSystem(Module) {
     fetchDataFile('kicks').then(data => {
       Module.FS.writeFile('kicks', data);
     }),
-    fetchDataFile('book_100k.txt').then(data => {
-      Module.FS.writeFile('book_100k.txt', data);
-    })
+    fetch('/data/book_compressed.txt')
+      .then(response => {
+        if (!response.ok) { throw new Error('Compressed book not available'); }
+        return response.text();
+      })
+      .then(data => {
+        Module.FS.writeFile('book_compressed.txt', data);
+      })
+      .catch(() => {
+        return fetchDataFile('book_100k.txt').then(data => {
+          Module.FS.writeFile('book_100k.txt', data);
+        });
+      })
   ]);
 }

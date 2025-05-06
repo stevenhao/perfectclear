@@ -15,8 +15,22 @@ async function initWasmModule() {
             Module.loadWasmData();
             wasmModule = Module;
             wasmLoaded = true;
+            console.log("WASM module loaded successfully");
+            
+            window.addEventListener('beforeunload', () => {
+              if (wasmModule) {
+                try {
+                  wasmModule.unloadWasmData();
+                  console.log("WASM module unloaded");
+                } catch (e) {
+                  console.error("Error unloading WASM module:", e);
+                }
+              }
+            });
+            
             resolve(wasmModule);
           } catch (error) {
+            console.error("Error initializing WASM module:", error);
             reject(error);
           }
         },

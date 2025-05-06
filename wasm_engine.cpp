@@ -105,8 +105,16 @@ void loadWasmData() {
   }
 }
 
+void unloadWasmData() {
+  if (dataLoaded) {
+    wasm_cleanup();
+    dataLoaded = false;
+  }
+}
+
 // Bind functions to JavaScript
 EMSCRIPTEN_BINDINGS(perfectclear_module) {
   emscripten::function("handleWasmRequest", &handleWasmRequest);
   emscripten::function("loadWasmData", &loadWasmData);
+  emscripten::function("unloadWasmData", &unloadWasmData);
 }

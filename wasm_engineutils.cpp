@@ -10,6 +10,11 @@ umap<piece, pair<piece, int>> wasm_trace;
 const int WASM_MAX_QUEUE_SIZE = 15 * 15 * 5;
 piece* wasm_piece_queue = new piece[WASM_MAX_QUEUE_SIZE];
 
+void wasm_cleanup() {
+  delete[] wasm_piece_queue;
+  wasm_piece_queue = nullptr;
+}
+
 umap<lll, bool> wasm_seen;
 int wasm_ql, wasm_qr;
 

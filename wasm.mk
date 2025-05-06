@@ -2,7 +2,7 @@ CC = emcc
 CXX = em++
 
 # Emscripten flags
-EMFLAGS = -s WASM=1 -s ALLOW_MEMORY_GROWTH=1 -s EXPORTED_RUNTIME_METHODS=['FS'] -s MODULARIZE=1 -s EXPORT_ES6=1
+EMFLAGS = -s WASM=1 -s ALLOW_MEMORY_GROWTH=1 -s EXPORTED_RUNTIME_METHODS=['FS'] -s MODULARIZE=1
 
 # Include directories
 INCLUDES = 
@@ -11,7 +11,7 @@ INCLUDES =
 CXXFLAGS = -O3 $(INCLUDES) $(EMFLAGS)
 
 # Source files
-SRCS = wasm_engine.cpp
+SRCS = tetris.cpp tetrisio.cpp wasm_engineutils.cpp wasm_engine_impl.cpp wasm_engine.cpp
 
 # Output files
 OUTPUT_DIR = public/wasm

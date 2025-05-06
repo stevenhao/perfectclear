@@ -106,9 +106,19 @@ function wasmAiMove(board, pieces, searchBreadth, callback) {
       data: Board.encode(board)
     });
     
-    const piecesJson = JSON.stringify(pieces);
+    const sanitizedPieces = pieces.map(p => {
+      if (typeof p === 'string') return p;
+      if (p && typeof p === 'object') {
+        if (p.nodeType || p.jquery) return null;
+        if (p.pieceType) return p.pieceType;
+      }
+      return null;
+    }).filter(p => p !== null);
+    
+    const piecesJson = JSON.stringify(sanitizedPieces);
     
     console.log('Board JSON:', boardJson);
+    console.log('Sanitized Pieces:', sanitizedPieces);
     console.log('Pieces JSON:', piecesJson);
     
     const boardPtr = wasmModule.allocateUTF8(boardJson);

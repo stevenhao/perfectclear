@@ -2,6 +2,7 @@ pieces = ['I', 'J', 'L', 'O', 'S', 'T', 'Z']
 getColor = (x) ->
   ['black', 'cyan', 'blue', 'orange', 'yellow', 'lime', 'purple', 'red'][x];
 
+# Ghost piece color
 ghostColor = 'dimgray'
 getDims = ($well) ->
   [parseInt($well.attr('w')), parseInt($well.attr('h'))]
@@ -75,6 +76,13 @@ $ ->
     print 'counter', counter.clears, counter.pieces
     $counter = $('#counter')
     $counter.text(counter.clears + '/' + counter.pieces)
+    # Add animation on counter update if it's a perfect clear and in zen mode
+    if window.zenMode? and window.lastClears? and counter.clears > window.lastClears
+      $counter.addClass('score-animate')
+      setTimeout(->
+        $counter.removeClass('score-animate')
+      , 500)
+    window.lastClears = counter.clears
 
   renderBoardWithPiece = (board, piece) -> 
     print 'rendering', piece
@@ -338,6 +346,7 @@ $ ->
       faster = !!e.target.checked
     )
     autoplaying = false
+    window.autoplaying = false  # Make autoplaying accessible globally
     autoplayStep = () ->
       aiMove (data) ->
         if $('#happy-indicator').text() != '🐻'
@@ -401,11 +410,21 @@ $ ->
 
     $('#autoplay').click (evt) ->
       if autoplaying
-        $('#autoplay').text('Autoplay')
+        if window.zenMode
+          $('#play-icon').show()
+          $('#pause-icon').hide()
+        else
+          $('#autoplay').text('Autoplay')
         autoplaying = false
+        window.autoplaying = false
       else
-        $('#autoplay').text('Pause')
+        if window.zenMode
+          $('#play-icon').hide()
+          $('#pause-icon').show()
+        else
+          $('#autoplay').text('Pause')
         autoplaying = true
+        window.autoplaying = true
         autoplayStep()
 
     $('#piece-send').click (evt) ->

@@ -1,14 +1,19 @@
 {
   "name": "tetris2",
   "version": "1.0.0",
-  "description": "",
+  "description": "Perfect Clear Tetris Game",
   "main": "dist/index.js",
   "scripts": {
     "build": "tsc",
     "start": "make && node dist/index.js",
     "dev": "nodemon src/index.ts",
     "test": "jest",
-    "test:watch": "jest --watch"
+    "test:watch": "jest --watch",
+    "start:coffee": "coffee index.coffee 4445",
+    "start:backend": "./server.o 4445",
+    "dev:frontend": "nodemon --ext coffee,js,html,css --watch index.coffee --watch public --exec \"coffee index.coffee 4445\"",
+    "dev:backend": "./server.o 4445",
+    "dev:coffee": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\""
   },
   "author": "",
   "license": "ISC",
@@ -22,11 +27,16 @@
     "@types/jest": "^29.5.14",
     "@types/node": "^22.15.9",
     "@types/supertest": "^6.0.3",
+    "coffeescript": "^1.12.7",
+    "concurrently": "^8.2.2",
     "jest": "^29.7.0",
     "nodemon": "^3.1.10",
     "supertest": "^7.1.0",
     "ts-jest": "^29.3.2",
     "ts-node": "^10.9.2",
     "typescript": "^5.8.3"
+  },
+  "engines": {
+    "node": ">=14.0.0"
   }
 }

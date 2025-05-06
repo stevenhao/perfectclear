@@ -20,6 +20,9 @@ app.use(express.static(__dirname + '/public/views'));
 app.get '/', (req, res) ->
   res.send('hi')
 
+app.get '/zen', (req, res) ->
+  res.sendFile(__dirname + '/public/zen.html')
+
 requests = {}
 reqCnt = 0
 

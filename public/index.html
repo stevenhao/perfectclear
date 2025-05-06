@@ -4,6 +4,7 @@
   <script type="text/coffeescript" src="steven.coffee"></script>
   <script type="text/coffeescript" src="tetris.coffee"></script>
   <script type="text/coffeescript" src="play.coffee"></script>
+  <script type="text/coffeescript" src="uptime.coffee"></script>
   <script type="text/javascript" src="coffee-script.js"></script>
   <script src="jquery.min.js"></script>
   <link rel="stylesheet" href="css/bootstrap.min.css">
@@ -53,6 +54,7 @@
       <div class="panel panel-default">
         <div class="panel-heading">
           <h3 class="panel-title" id="happy-indicator">🤓</h3>
+          <div id="server-status" style="font-size: 12px; color: #666;">Server Uptime: <span id="uptime-value">Loading...</span></div>
         </div>
         <div class="panel-body" style="position:relative">
           <div id="hold" style="float:left; margin-left:1em;position:relative;width:6em;height:6em; background-color: black">

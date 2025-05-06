@@ -34,6 +34,26 @@ client.on 'data', (data) ->
   print 'sending', msg
   requests[msg.reqid].send(msg.body)
 
+# Server uptime tracking
+serverUptime = 0
+updateUptime = ->
+  reqCnt += 1
+  uptimeReq = {
+    type: 'uptime',
+    reqid: reqCnt
+  }
+  requests[reqCnt] = {
+    send: (data) ->
+      serverUptime = data.uptime_seconds
+  }
+  client.write(JSON.stringify(uptimeReq))
+
+# Update uptime every 5 seconds
+setInterval(updateUptime, 5000)
+
+app.get '/uptime', (req, res) ->
+  res.json({ uptime_seconds: serverUptime })
+
 app.post '/ai', (req, res) ->
   if req.body?
     msg = req.body

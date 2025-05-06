@@ -7,12 +7,16 @@
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <unistd.h>
+#include <chrono>
+#include <ctime>
 
 #include "json.hpp"
 #include "engine.cpp"
 
 using json = nlohmann::json;
 using namespace std;
+
+std::chrono::steady_clock::time_point server_start_time;
 
 void error(const char *msg) {
   perror(msg);
@@ -63,6 +67,22 @@ string handleRequest(string input) {
   try {
     auto j = json::parse(input);
     cerr << j << "\n";
+    
+    if (j.is_object() && j["type"].is_string() && j["type"].get<string>() == "uptime" && 
+        j["reqid"].is_number()) {
+      int reqid = j["reqid"].get<int>();
+      auto now = std::chrono::steady_clock::now();
+      auto uptime_seconds = std::chrono::duration_cast<std::chrono::seconds>(
+          now - server_start_time).count();
+      
+      json ret;
+      ret["uptime_seconds"] = uptime_seconds;
+      json msg;
+      msg["body"] = ret;
+      msg["reqid"] = reqid;
+      return msg.dump();
+    }
+    
     if (j.is_object() && j["board"].is_object() && j["pieces"].is_array() &&
         j["reqid"].is_number()) {
       int reqid = j["reqid"].get<int>();
@@ -118,6 +138,8 @@ string handleRequest(string input) {
 }
 
 int main(int argc, char *argv[]) {
+  server_start_time = std::chrono::steady_clock::now();
+  
   loadData();
   loadBook();
   /*  stringstream ss;

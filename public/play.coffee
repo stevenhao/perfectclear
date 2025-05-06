@@ -26,8 +26,8 @@ $ ->
       [0..h-1].forEach (y) ->
         $el = $('<div>').attr('x', x).attr('y', y)
         $el.addClass('block').css({
-          width: cellsize - 1
-          height: cellsize - 1
+          width: cellsize
+          height: cellsize
           position: 'absolute'
           top: (h-1-y)*cellsize
           left: x*cellsize

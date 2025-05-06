@@ -193,6 +193,14 @@
           } else if (document.documentElement.msRequestFullscreen) {
             document.documentElement.msRequestFullscreen();
           }
+          
+          // Call resize handler immediately and with delays
+          if (window.resizeHandler) {
+            console.log('Calling resize handler immediately after entering fullscreen');
+            window.resizeHandler();
+            setTimeout(window.resizeHandler, 10);
+            setTimeout(window.resizeHandler, 60);
+          }
         } else {
           if (document.exitFullscreen) {
             document.exitFullscreen();
@@ -202,6 +210,14 @@
             document.webkitExitFullscreen();
           } else if (document.msExitFullscreen) {
             document.msExitFullscreen();
+          }
+          
+          // Call resize handler immediately and with delays
+          if (window.resizeHandler) {
+            console.log('Calling resize handler immediately after exiting fullscreen');
+            window.resizeHandler();
+            setTimeout(window.resizeHandler, 10);
+            setTimeout(window.resizeHandler, 60);
           }
         }
       }

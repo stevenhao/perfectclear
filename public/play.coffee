@@ -65,6 +65,9 @@ $ ->
       console.log('Re-rendering hold')
       window.renderHold(window.hold)
   
+  # Make resizeHandler globally accessible
+  window.resizeHandler = resizeHandler
+  
   # Listen for window resize events with 10ms and 60ms delays
   $(window).on 'resize', ->
     setTimeout(resizeHandler, 10)

@@ -1,0 +1,32 @@
+{
+  "family": "perfectclear-backend",
+  "networkMode": "awsvpc",
+  "executionRoleArn": "arn:aws:iam::your-account-id:role/ecsTaskExecutionRole",
+  "containerDefinitions": [
+    {
+      "name": "perfectclear-backend",
+      "image": "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/perfectclear-backend:latest",
+      "essential": true,
+      "portMappings": [
+        {
+          "containerPort": 4445,
+          "hostPort": 4445,
+          "protocol": "tcp"
+        }
+      ],
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/ecs/perfectclear-backend",
+          "awslogs-region": "${AWS_REGION}",
+          "awslogs-stream-prefix": "ecs"
+        }
+      }
+    }
+  ],
+  "requiresCompatibilities": [
+    "FARGATE"
+  ],
+  "cpu": "256",
+  "memory": "512"
+}

@@ -158,23 +158,9 @@ class Stream:
         self.snapshots = []
 
     def get_path(self, search_breadth):
-        data = self.game.to_json()
-        data['search_breadth'] = search_breadth
-        # print('POST', data)
-        r = requests.post('http://127.0.0.1:4444/ai', json = data)
-        result = r.json()
-        path_strings = result['pathStrings']
-        idx = 1 if result['path'][0] == 5 else 0
-        t = self.game.queue[idx]
-        print('idx', idx, 't', t)
-        print(self.game.queue)
-        print(result['path'])
-        self.path = [Piece(self.game.queue[0] if s == path_strings[0] else t, s) for s in path_strings]
+        print("ERROR: Server-side AI is no longer supported. Please use the WebAssembly implementation.")
+        self.path = []
         self.path_idx = 0
-        for p, pp in zip(path_strings, self.path):
-            print(pp.t, pp.blocks)
-            print(p)
-        # print(self.path)
 
     def get_snapshot(self, search_breadth=300):
         if not self.path:

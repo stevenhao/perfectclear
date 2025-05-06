@@ -65,22 +65,27 @@ $ ->
       console.log('Re-rendering hold')
       window.renderHold(window.hold)
   
-  # Listen for window resize events with a 10ms delay
+  # Listen for window resize events with 10ms and 60ms delays
   $(window).on 'resize', ->
     setTimeout(resizeHandler, 10)
+    setTimeout(resizeHandler, 60)
   
-  # Listen for fullscreen change events across browsers with a 10ms delay
+  # Listen for fullscreen change events across browsers with 10ms and 60ms delays
   document.addEventListener('fullscreenchange', ->
     setTimeout(resizeHandler, 10)
+    setTimeout(resizeHandler, 60)
   )
   document.addEventListener('webkitfullscreenchange', ->
     setTimeout(resizeHandler, 10)
+    setTimeout(resizeHandler, 60)
   )
   document.addEventListener('mozfullscreenchange', ->
     setTimeout(resizeHandler, 10)
+    setTimeout(resizeHandler, 60)
   )
   document.addEventListener('MSFullscreenChange', ->
     setTimeout(resizeHandler, 10)
+    setTimeout(resizeHandler, 60)
   )
 
   renderBoard = (board) ->

@@ -2,6 +2,16 @@
 <head>
   <!-- Latest compiled and minified JavaScript -->
   <!-- Load WASM module -->
+  <script>
+    // Configure Module for Emscripten before loading the WASM module
+    var Module = {
+      locateFile: function(path) {
+        if (path.endsWith('.wasm')) return 'dist/' + path;
+        if (path.endsWith('.data')) return 'dist/' + path;
+        return path;
+      }
+    };
+  </script>
   <script src="dist/perfectclear.js"></script>
   <script src="perfectclear-wasm.js"></script>
   

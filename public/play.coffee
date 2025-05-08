@@ -312,6 +312,10 @@ $ ->
       code = evt.originalEvent.code
       console.log(evt, code)
 
+      # Ignore shift keys when autoplay is active
+      if (code == 'ShiftLeft' or code == 'ShiftRight') and window.autoplaying
+        return false
+
       if code == 'Minus'
         undo()
       else if code == 'Equal'

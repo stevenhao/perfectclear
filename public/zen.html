@@ -174,6 +174,10 @@
         if (arrowKeys.includes(e.key) && window.autoplaying) {
           $('#autoplay').click(); // Pause the AI
         }
+        // Ignore shift keys during autoplay
+        if ((e.code === 'ShiftLeft' || e.code === 'ShiftRight') && window.autoplaying) {
+          return false;
+        }
       });
     });
   </script>

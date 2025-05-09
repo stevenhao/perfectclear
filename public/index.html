@@ -23,6 +23,7 @@
   <script src="jquery.min.js"></script>
   <link rel="stylesheet" href="css/bootstrap.min.css">
   <link rel="stylesheet" href="css/tetris.css">
+  <link rel="stylesheet" href="css/snatchit-smash.css">
   <style>
     body {
       background-color: #121212;
@@ -125,7 +126,20 @@
                 </button>
               </div>
               
-              <!-- Removed all other buttons and controls -->
+              <!-- Snatchit & Smash Controls -->
+              <div id="snatchit-container" class="snatchit-container">
+                <div class="snatchit-icon"></div>
+              </div>
+              <div id="smash-container" class="smash-container">
+                <div class="smash-icon"></div>
+              </div>
+              <div id="smash-meter-container" class="smash-meter-container">
+                <div id="smash-meter" class="smash-meter"></div>
+              </div>
+              <div id="snatch-preview" class="snatch-preview">
+                <!-- Snatchable pieces will be added here dynamically -->
+              </div>
+              <div id="mode-label" class="mode-label">SMASH MODE</div>
             </div>
           </div>
         </div>

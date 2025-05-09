@@ -132,6 +132,10 @@ $ ->
           top: top
         })
         $el.appendTo($preview)
+    
+    # Also update snatch preview
+    if window.snatchitMode and preview.length > 0
+      renderSnatchPreview(preview)
 
   renderHold = (pieceType) ->
     [w, h] = [4, 3]
@@ -198,15 +202,165 @@ $ ->
       renderPreview(preview)
       curPiece
 
+    # Initialize Snatchit & Smash features
+    window.snatchitMode = false
+    window.smashMode = false
+    window.smashMeter = 0
+    window.smashMeterMax = 100
+    window.snatchedPiece = null
+    
+    # Function to render snatch preview
+    renderSnatchPreview = (preview) ->
+      $snatchPreview = $('#snatch-preview')
+      $snatchPreview.empty()
+      
+      # Only show first 3 pieces for snatchit
+      [0..Math.min(2, preview.length - 1)].forEach (i) ->
+        pieceType = preview[i]
+        color = getColor(PieceType.getIndex(pieceType))
+        $pieceContainer = $('<div>').addClass('snatch-piece').attr('data-piece-index', i)
+        
+        # Create mini version of the piece
+        cellsize = $snatchPreview.height() * 0.6 / 2
+        PieceType.blocks(pieceType).forEach ([x, y]) ->
+          $el = $('<div>')
+          $el.css({
+            width: cellsize
+            height: cellsize
+            position: 'absolute'
+            backgroundColor: color
+            left: (x + 1) * cellsize
+            top: (1 - y) * cellsize
+          })
+          $el.appendTo($pieceContainer)
+        
+        $pieceContainer.on 'click', ->
+          if window.snatchitMode
+            snatchPiece(i)
+        
+        $pieceContainer.appendTo($snatchPreview)
+    
+    # Function to snatch a piece
+    snatchPiece = (index) ->
+      if index < bag.length
+        # Create snatch effect
+        createSnatchEffect()
+        
+        # Get the piece from the bag
+        window.snatchedPiece = bag.splice(index, 1)[0]
+        
+        # Update preview
+        preview = bag.concat(nextBag).slice(0, 6)
+        renderPreview(preview)
+        
+        # Replace current piece with snatched piece
+        curPiece = Piece.create(window.snatchedPiece, board)
+        renderBoardWithPiece(board, curPiece)
+        
+        # Reset snatched piece
+        window.snatchedPiece = null
+        
+        # Turn off snatchit mode
+        toggleSnatchitMode()
+    
+    # Function to create snatch effect
+    createSnatchEffect = ->
+      $effect = $('<div>').addClass('snatch-effect')
+      $effect.css({
+        width: '100px',
+        height: '100px',
+        left: event.pageX - 50,
+        top: event.pageY - 50,
+        backgroundImage: 'radial-gradient(circle, rgba(255,87,34,0.8) 0%, rgba(255,87,34,0) 70%)'
+      })
+      $('body').append($effect)
+      setTimeout ->
+        $effect.remove()
+      , 500
+    
+    # Function to create smash effect
+    createSmashEffect = (x, y) ->
+      $board = $('#game-inner')
+      [w, h] = getDims($board)
+      cellsize = min [$board.height() / h, $board.width() / w]
+      
+      $effect = $('<div>').addClass('smash-effect')
+      $effect.css({
+        width: '50px',
+        height: '50px',
+        left: x * cellsize + cellsize/2 - 25,
+        top: (h-1-y) * cellsize + cellsize/2 - 25,
+        backgroundImage: 'radial-gradient(circle, rgba(33,150,243,0.8) 0%, rgba(33,150,243,0) 70%)'
+      })
+      $('body').append($effect)
+      setTimeout ->
+        $effect.remove()
+      , 500
+    
+    # Function to toggle snatchit mode
+    toggleSnatchitMode = ->
+      window.snatchitMode = !window.snatchitMode
+      $('#snatchit-container').toggleClass('active', window.snatchitMode)
+      $('#snatch-preview').toggle(window.snatchitMode)
+      
+      if window.snatchitMode
+        # Turn off smash mode if it's on
+        if window.smashMode
+          toggleSmashMode()
+        renderSnatchPreview(preview)
+    
+    # Function to toggle smash mode
+    toggleSmashMode = ->
+      if window.smashMeter >= window.smashMeterMax
+        window.smashMode = !window.smashMode
+        $('#smash-container').toggleClass('active', window.smashMode)
+        $('#mode-label').toggleClass('active', window.smashMode)
+        
+        if !window.smashMode
+          # Reset smash meter when turning off
+          window.smashMeter = 0
+          updateSmashMeter()
+    
+    # Function to update smash meter
+    updateSmashMeter = ->
+      percentage = (window.smashMeter / window.smashMeterMax) * 100
+      $('#smash-meter').css('width', percentage + '%')
+      
+      # Make the container glow when full
+      if window.smashMeter >= window.smashMeterMax
+        $('#smash-meter-container').css('box-shadow', '0 0 15px rgba(33, 150, 243, 0.7)')
+      else
+        $('#smash-meter-container').css('box-shadow', 'none')
+    
+    # Initialize UI elements
+    $('#snatchit-container').on 'click', ->
+      toggleSnatchitMode()
+    
+    $('#smash-container').on 'click', ->
+      toggleSmashMode()
+    
+    # Hide snatch preview initially
+    $('#snatch-preview').hide()
+    
+    # Initialize smash meter
+    updateSmashMeter()
+    
+    # Modified commands with Snatchit & Smash features
     commands = {
       ArrowLeft: Piece.moveLeft,
       ArrowRight: Piece.moveRight,
       ArrowDown: Piece.hardDrop,
       ArrowUp: Piece.rotateA,
       KeyX: Piece.rotateA,
-      KeyZ: Piece.rotateB
+      KeyZ: Piece.rotateB,
       ShiftLeft: swapHold,
       ShiftRight: swapHold,
+      KeyS: -> 
+        toggleSnatchitMode()
+        curPiece
+      KeyM: -> 
+        toggleSmashMode()
+        curPiece
     }
 
     counter = {
@@ -296,6 +450,18 @@ $ ->
       renderBoardWithPiece(board, curPiece)
       renderPreview(preview)
       renderCounter(counter)
+      
+      # Reset Snatchit & Smash features
+      window.snatchitMode = false
+      window.smashMode = false
+      window.smashMeter = 0
+      window.snatchedPiece = null
+      $('#snatchit-container').removeClass('active')
+      $('#smash-container').removeClass('active')
+      $('#mode-label').removeClass('active')
+      $('#snatch-preview').hide()
+      updateSmashMeter()
+      
       save()
 
     $('#undo').click(undo)
@@ -443,6 +609,13 @@ $ ->
           $('#autoplay').text('Pause')
         autoplaying = true
         window.autoplaying = true
+        
+        # Turn off snatchit and smash modes when autoplay starts
+        if window.snatchitMode
+          toggleSnatchitMode()
+        if window.smashMode
+          toggleSmashMode()
+          
         autoplayStep()
 
     $('#piece-send').click (evt) ->

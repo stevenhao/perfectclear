@@ -129,14 +129,46 @@ Board = {
     board
 
   canAddPiece: (board, piece) ->
-    Piece.blocks(piece).every (loc) -> Board.open(board, loc)
+    # In smash mode, we allow pieces to overlap with existing blocks
+    if window.smashMode
+      Piece.blocks(piece).every (loc) -> 
+        Board.inBounds(board, loc)
+    else
+      Piece.blocks(piece).every (loc) -> Board.open(board, loc)
 
   addPiece: (prvBoard, piece) ->
-    board = Board.addPieceNoClear(prvBoard, piece)
+    board = Board.copy(prvBoard)
+    
+    # In smash mode, we need to handle block smashing
+    if window.smashMode
+      # Get the blocks of the piece
+      pieceBlocks = Piece.blocks(piece)
+      
+      # For each block in the piece
+      pieceBlocks.forEach ([x, y]) ->
+        # If there's already a block at this position, create a smash effect
+        if Board.get(board, [x, y]) > 0
+          createSmashEffect(x, y) if window.createSmashEffect?
+        
+        # Set the block to the piece type for color
+        board[x][y] = PieceType.getIndex(piece.pieceType)
+    else
+      # Normal behavior without smash mode
+      board = Board.addPieceNoClear(prvBoard, piece)
+    
+    # Clear completed lines
     [w, h] = Board.dims(board)
+    linesCleared = 0
     [0..h-1].forEach (y) ->
-      while ([0..w-1].every (x) -> board[x][y])
+      if ([0..w-1].every (x) -> board[x][y])
         Board.shiftDown(board, y)
+        linesCleared += 1
+    
+    # Increase smash meter when lines are cleared
+    if linesCleared > 0 and window.smashMeter? and window.smashMeterMax?
+      window.smashMeter = Math.min(window.smashMeterMax, window.smashMeter + (linesCleared * 25))
+      window.updateSmashMeter() if window.updateSmashMeter?
+    
     board
   isEmpty: (board) ->
     board.every (row) ->
